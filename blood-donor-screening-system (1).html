@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Donor Eligibility Screening System - Saudi Arabia</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .highlight { background-color: #fef3c7; }
+        .deferral-badge { 
+            display: inline-block; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-size: 0.875rem; 
+            font-weight: 500;
+        }
+        .accept { background-color: #d1fae5; color: #065f46; }
+        .defer-temp { background-color: #fed7aa; color: #92400e; }
+        .defer-perm { background-color: #fecaca; color: #991b1b; }
+        .defer-conditional { background-color: #ddd6fe; color: #5b21b6; }
+        .print-only { display: none; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+
+        // Complete Rules Database with ALL rules from source documents
+        const COMPLETE_RULES_DATABASE = [
+            // General Health & Requirements
+            {id: "R001", category: "General Health", question: "Q1", condition: "Not feeling healthy or well", decision: "Defer", duration: "Until evaluated", keywords: "unwell|sick|ill|cold"},
+            {id: "R002", category: "General Health", question: "Q1", condition: "No reasonable meal before donation", decision: "Defer", duration: "Until meal consumed", keywords: "meal|food|eaten"},
+            {id: "R003", category: "General Health", question: "Q1", condition: "Insufficient sleep", decision: "Defer", duration: "Until adequate rest", keywords: "sleep|tired|fatigue"},
+            {id: "R004", category: "Education", question: "Q2", condition: "Has not read educational materials", decision: "Defer", duration: "Until materials read", keywords: "education|materials|read"},
+            {id: "R005", category: "Previous Deferral", question: "Q3", condition: "Previously deferred permanently", decision: "Permanent", duration: "Permanent", keywords: "refused|deferred|previous"},
+            {id: "R006", category: "Previous Deferral", question: "Q3", condition: "Previously deferred temporarily", decision: "Defer", duration: "Per original period", keywords: "temporary|deferral"},
+            
+            // Dental Procedures (Complete list from document)
+            {id: "R007", category: "Dental", question: "Q4", condition: "Ortho wire adjustment", decision: "Accept", duration: "None", keywords: "ortho|wire|adjustment"},
+            {id: "R008", category: "Dental", question: "Q4", condition: "Fluoride application", decision: "Accept", duration: "None", keywords: "fluoride"},
+            {id: "R009", category: "Dental", question: "Q4", condition: "Superficial cleaning", decision: "Accept", duration: "None", keywords: "cleaning|superficial"},
+            {id: "R010", category: "Dental", question: "Q4", condition: "Appliance delivery", decision: "Accept", duration: "None", keywords: "appliance|denture"},
+            {id: "R011", category: "Dental", question: "Q4", condition: "Ortho band application", decision: "Defer", duration: "24 hours", keywords: "band|braces"},
+            {id: "R012", category: "Dental", question: "Q4", condition: "Restorative treatment/Fillings", decision: "Defer", duration: "24 hours", keywords: "filling|restoration"},
+            {id: "R013", category: "Dental", question: "Q4", condition: "Simple root canal", decision: "Defer", duration: "24 hours", keywords: "root canal|simple"},
+            {id: "R014", category: "Dental", question: "Q4", condition: "Crown/bridge preparation", decision: "Defer", duration: "24 hours", keywords: "crown|bridge"},
+            {id: "R015", category: "Dental", question: "Q4", condition: "Other non-surgical dental procedures", decision: "Defer", duration: "24 hours", keywords: "dental|non-surgical"},
+            {id: "R016", category: "Dental", question: "Q4", condition: "Tooth extraction", decision: "Defer", duration: "7 days", keywords: "extraction|tooth removal"},
+            {id: "R017", category: "Dental", question: "Q4", condition: "Dental biopsy", decision: "Defer", duration: "7 days", keywords: "biopsy|dental"},
+            {id: "R018", category: "Dental", question: "Q4", condition: "Surgical root canal", decision: "Defer", duration: "7 days", keywords: "root canal|surgical"},
+            {id: "R019", category: "Dental", question: "Q4", condition: "Dental implant", decision: "Defer", duration: "7 days", keywords: "implant|dental"},
+            {id: "R020", category: "Dental", question: "Q4", condition: "Surgical dental procedures", decision: "Defer", duration: "7 days", keywords: "surgical|oral surgery"},
+            
+            // Wounds & Infections
+            {id: "R021", category: "Infections", question: "Q5", condition: "Wound in past 2 weeks", decision: "Defer", duration: "2 weeks after healing", keywords: "wound|cut|injury"},
+            {id: "R022", category: "Infections", question: "Q5", condition: "Skin infection in past 2 weeks", decision: "Defer", duration: "2 weeks after healing", keywords: "skin infection|abscess"},
+            {id: "R023", category: "Infections", question: "Q5", condition: "Oral/IV antibiotics for wound/infection", decision: "Defer", duration: "4 weeks after completion", keywords: "antibiotics|oral|IV"},
+            
+            // Cancer
+            {id: "R024", category: "Cancer", question: "Q6", condition: "Hematological cancer (leukemia)", decision: "Permanent", duration: "Permanent", keywords: "leukemia|blood cancer"},
+            {id: "R025", category: "Cancer", question: "Q6", condition: "Non-hematological cancer, cancer-free", decision: "Defer", duration: "12 months after last treatment", keywords: "cancer|tumor|malignancy"},
+            
+            // Heart & Lung Conditions
+            {id: "R026", category: "Medical", question: "Q7", condition: "Heart problems", decision: "Medical Review", duration: "Per physician", keywords: "heart|cardiac|coronary"},
+            {id: "R027", category: "Medical", question: "Q7", condition: "Lung problems", decision: "Medical Review", duration: "Per physician", keywords: "lung|respiratory|breathing"},
+            
+            // Bleeding Disorders
+            {id: "R028", category: "Medical", question: "Q8", condition: "Hemophilia or clotting disorder", decision: "Permanent", duration: "Permanent (donor safety)", keywords: "hemophilia|bleeding|clotting"},
+            
+            // Diabetes
+            {id: "R029", category: "Medical", question: "Q9", condition: "Diabetes - must eat within 2 hours", decision: "Conditional", duration: "Accept if eaten", keywords: "diabetes|sugar|insulin"},
+            
+            // Pregnancy
+            {id: "R030", category: "Pregnancy", question: "Q10", condition: "Currently pregnant", decision: "Defer", duration: "9 months after end", keywords: "pregnant|pregnancy"},
+            {id: "R031", category: "Pregnancy", question: "Q11", condition: "Pregnant in past 9 months", decision: "Defer", duration: "9 months after end", keywords: "pregnancy|birth|miscarriage"},
+            {id: "R032", category: "Pregnancy", question: "Q11", condition: "Currently breastfeeding", decision: "Defer", duration: "Until stopped", keywords: "breastfeeding|nursing|lactating"},
+            {id: "R033", category: "Pregnancy", question: "Q11", condition: "Previous pregnancies (TRALI risk)", decision: "Medical Review", duration: "Per TRALI protocol", keywords: "TRALI|pregnancy history"},
+            
+            // Medications - Complete List from Medication Deferral Document
+            {id: "R034", category: "Medications", question: "Q12-13", condition: "Antibiotics/Antivirals/Antifungals for treatment", decision: "Defer", duration: "1 month", keywords: "antibiotic|antiviral|antifungal"},
+            {id: "R035", category: "Medications", question: "Q13", condition: "Aspirin", decision: "Defer Platelets", duration: "2 days", keywords: "aspirin"},
+            {id: "R036", category: "Medications", question: "Q13", condition: "Feldene/Piroxicam", decision: "Defer Platelets", duration: "2 days", keywords: "feldene|piroxicam"},
+            {id: "R037", category: "Medications", question: "Q13", condition: "Effient/Prasugrel", decision: "Defer Platelets", duration: "3 days", keywords: "effient|prasugrel"},
+            {id: "R038", category: "Medications", question: "Q13", condition: "Brilinta/Ticagrelor", decision: "Defer Platelets", duration: "7 days", keywords: "brilinta|ticagrelor"},
+            {id: "R039", category: "Medications", question: "Q13", condition: "Plavix/Clopidogrel", decision: "Defer Platelets", duration: "14 days", keywords: "plavix|clopidogrel"},
+            {id: "R040", category: "Medications", question: "Q13", condition: "Ticlid/Ticlopidine", decision: "Defer Platelets", duration: "14 days", keywords: "ticlid|ticlopidine"},
+            {id: "R041", category: "Medications", question: "Q13", condition: "Zontivity/Vorapaxar", decision: "Defer Platelets", duration: "1 month", keywords: "zontivity|vorapaxar"},
+            {id: "R042", category: "Medications", question: "Q13", condition: "Arixtra/Fondaparinux", decision: "Defer", duration: "2 days", keywords: "arixtra|fondaparinux"},
+            {id: "R043", category: "Medications", question: "Q13", condition: "Eliquis/Apixaban", decision: "Defer", duration: "2 days", keywords: "eliquis|apixaban"},
+            {id: "R044", category: "Medications", question: "Q13", condition: "Fragmin/Dalteparin", decision: "Defer", duration: "2 days", keywords: "fragmin|dalteparin"},
+            {id: "R045", category: "Medications", question: "Q13", condition: "Lovenox/Enoxaparin", decision: "Defer", duration: "2 days", keywords: "lovenox|enoxaparin"},
+            {id: "R046", category: "Medications", question: "Q13", condition: "Pradaxa/Dabigatran", decision: "Defer", duration: "2 days", keywords: "pradaxa|dabigatran"},
+            {id: "R047", category: "Medications", question: "Q13", condition: "Savaysa/Edoxaban", decision: "Defer", duration: "2 days", keywords: "savaysa|edoxaban"},
+            {id: "R048", category: "Medications", question: "Q13", condition: "Xarelto/Rivaroxaban", decision: "Defer", duration: "2 days", keywords: "xarelto|rivaroxaban"},
+            {id: "R049", category: "Medications", question: "Q13", condition: "Coumadin/Warfarin", decision: "Defer", duration: "7 days", keywords: "coumadin|warfarin"},
+            {id: "R050", category: "Medications", question: "Q13", condition: "Heparin", decision: "Defer", duration: "7 days", keywords: "heparin"},
+            {id: "R051", category: "Medications", question: "Q13", condition: "Accutane/Isotretinoin", decision: "Defer", duration: "1 month", keywords: "accutane|isotretinoin"},
+            {id: "R052", category: "Medications", question: "Q13", condition: "Thalomid/Thalidomide", decision: "Defer", duration: "1 month", keywords: "thalomid|thalidomide"},
+            {id: "R053", category: "Medications", question: "Q13", condition: "Revlimid/Lenalidomide", decision: "Defer", duration: "1 month", keywords: "revlimid|lenalidomide"},
+            {id: "R054", category: "Medications", question: "Q13", condition: "Rinvoq/Upadacitinib", decision: "Defer", duration: "1 month", keywords: "rinvoq|upadacitinib"},
+            {id: "R055", category: "Medications", question: "Q13", condition: "Propecia/Finasteride (hair loss)", decision: "Defer", duration: "1 month", keywords: "propecia|finasteride hair"},
+            {id: "R056", category: "Medications", question: "Q13", condition: "Proscar/Finasteride (prostate)", decision: "Defer", duration: "1 month", keywords: "proscar|finasteride prostate"},
+            {id: "R057", category: "Medications", question: "Q13", condition: "Avodart/Dutasteride", decision: "Defer", duration: "6 months", keywords: "avodart|dutasteride"},
+            {id: "R058", category: "Medications", question: "Q13", condition: "Cellcept/Mycophenolate", decision: "Defer", duration: "6 weeks", keywords: "cellcept|mycophenolate"},
+            {id: "R059", category: "Medications", question: "Q13", condition: "Hepatitis B Immune Globulin", decision: "Defer", duration: "6 months", keywords: "HBIG|hepatitis globulin"},
+            {id: "R060", category: "Medications", question: "Q13", condition: "HIV PrEP/PEP (oral)", decision: "Defer", duration: "6 months", keywords: "PrEP|PEP|truvada|descovy"},
+            {id: "R061", category: "Medications", question: "Q13", condition: "HIV PrEP (injectable)", decision: "Defer", duration: "2 years", keywords: "apretude|cabotegravir"},
+            {id: "R062", category: "Medications", question: "Q13", condition: "Erivedge/Vismodegib", decision: "Defer", duration: "24 months", keywords: "erivedge|vismodegib"},
+            {id: "R063", category: "Medications", question: "Q13", condition: "Odomzo/Sonidegib", decision: "Defer", duration: "24 months", keywords: "odomzo|sonidegib"},
+            {id: "R064", category: "Medications", question: "Q13", condition: "Aubagio/Teriflunomide", decision: "Defer", duration: "24 months", keywords: "aubagio|teriflunomide"},
+            {id: "R065", category: "Medications", question: "Q13", condition: "Arava/Leflunomide", decision: "Defer", duration: "24 months", keywords: "arava|leflunomide"},
+            {id: "R066", category: "Medications", question: "Q13", condition: "Soriatane/Acitretin", decision: "Defer", duration: "3 years", keywords: "soriatane|acitretin"},
+            {id: "R067", category: "Medications", question: "Q13", condition: "Tegison/Etretinate", decision: "Permanent", duration: "Permanent", keywords: "tegison|etretinate"},
+            {id: "R068", category: "Medications", question: "Q13", condition: "HIV treatment (ART)", decision: "Permanent", duration: "Permanent", keywords: "HIV treatment|ART|antiretroviral"},
+            {id: "R069", category: "Medications", question: "Q13", condition: "Experimental medications", decision: "Medical Review", duration: "Per medical director", keywords: "experimental|clinical trial"},
+            
+            // Vaccines - Complete list from Table 1
+            {id: "R070", category: "Vaccines", question: "Q14", condition: "Killed/inactivated vaccines", decision: "Accept", duration: "None if no symptoms", keywords: "killed|inactivated|toxoid"},
+            {id: "R071", category: "Vaccines", question: "Q14", condition: "Recombinant vaccines (HPV, Shingrix)", decision: "Accept", duration: "None", keywords: "recombinant|HPV|shingrix"},
+            {id: "R072", category: "Vaccines", question: "Q14", condition: "COVID mRNA vaccines", decision: "Accept", duration: "None", keywords: "COVID|mRNA|pfizer|moderna"},
+            {id: "R073", category: "Vaccines", question: "Q14", condition: "Jynneos (Mpox) vaccine", decision: "Accept", duration: "None", keywords: "jynneos|mpox|monkeypox"},
+            {id: "R074", category: "Vaccines", question: "Q14", condition: "Intranasal flu vaccine", decision: "Accept", duration: "None", keywords: "intranasal|flu|nasal"},
+            {id: "R075", category: "Vaccines", question: "Q14", condition: "Vaxchora oral cholera", decision: "Accept", duration: "None", keywords: "vaxchora|cholera oral"},
+            {id: "R076", category: "Vaccines", question: "Q14", condition: "Measles, Mumps, Oral Polio, Oral Typhoid, Yellow Fever", decision: "Defer", duration: "2 weeks", keywords: "measles|mumps|oral polio|typhoid oral|yellow fever"},
+            {id: "R077", category: "Vaccines", question: "Q14", condition: "COVID live attenuated or uncertain type", decision: "Defer", duration: "14 days", keywords: "COVID live|COVID uncertain"},
+            {id: "R078", category: "Vaccines", question: "Q14", condition: "German measles (Rubella), Varicella", decision: "Defer", duration: "4 weeks", keywords: "rubella|varicella|chickenpox|shingles"},
+            {id: "R079", category: "Vaccines", question: "Q14", condition: "Smallpox vaccinia vaccine", decision: "Defer", duration: "8 weeks or per Q12 flowchart", keywords: "smallpox|vaccinia"},
+            {id: "R080", category: "Vaccines", question: "Q15", condition: "Contact with smallpox vaccinee", decision: "Defer", duration: "8 weeks", keywords: "smallpox contact|vaccinia exposure"},
+            
+            // Blood Donation History
+            {id: "R081", category: "Donation History", question: "Q16", condition: "Whole blood donation in past 8 weeks", decision: "Defer", duration: "8 weeks", keywords: "donated blood|whole blood"},
+            {id: "R082", category: "Donation History", question: "Q16", condition: "Platelet/plasma donation in past 2 days", decision: "Defer", duration: "2 days", keywords: "platelets|plasma|apheresis"},
+            {id: "R083", category: "Donation History", question: "Q17", condition: "Double RBC donation in past 16 weeks", decision: "Defer", duration: "16 weeks", keywords: "double red|2RBC|double unit"},
+            
+            // Hepatitis
+            {id: "R084", category: "Hepatitis", question: "Q18", condition: "Positive test for Hepatitis B or C", decision: "Permanent", duration: "Permanent", keywords: "hepatitis B|hepatitis C|HBV|HCV positive"},
+            {id: "R085", category: "Hepatitis", question: "Q19", condition: "Sexual contact with hepatitis patient", decision: "Defer", duration: "6 months", keywords: "sex hepatitis|sexual contact hepatitis"},
+            {id: "R086", category: "Hepatitis", question: "Q20", condition: "Living with hepatitis patient", decision: "Defer", duration: "6 months", keywords: "live with hepatitis|household hepatitis"},
+            
+            // STDs
+            {id: "R087", category: "STDs", question: "Q21", condition: "Syphilis or gonorrhea", decision: "Defer", duration: "3 months after treatment", keywords: "syphilis|gonorrhea|STD"},
+            
+            // HIV
+            {id: "R088", category: "HIV", question: "Q22", condition: "Positive HIV test", decision: "Permanent", duration: "Permanent", keywords: "HIV positive|AIDS"},
+            {id: "R089", category: "HIV", question: "Q23", condition: "HIV treatment medications", decision: "Permanent", duration: "Permanent", keywords: "HIV medication|ART"},
+            {id: "R090", category: "HIV", question: "Q24", condition: "HIV prevention medications (PrEP/PEP)", decision: "Defer", duration: "Per medication type", keywords: "PrEP|PEP|HIV prevention"},
+            
+            // Sexual Risk Behaviors
+            {id: "R091", category: "Sexual Risk", question: "Q25", condition: "Sexual contact outside marriage", decision: "Permanent", duration: "Permanent", keywords: "sex outside marriage|extramarital"},
+            {id: "R092", category: "Sexual Risk", question: "Q26", condition: "Same-gender sexual contact", decision: "Permanent", duration: "Permanent", keywords: "same gender|homosexual|MSM"},
+            {id: "R093", category: "Sexual Risk", question: "Q27", condition: "Undocumented marriage sexual contact", decision: "Defer", duration: "12 months", keywords: "undocumented marriage|unofficial marriage"},
+            {id: "R094", category: "Sexual Risk", question: "Q28", condition: "Sexual contact with HIV+ person", decision: "Defer", duration: "6 months", keywords: "sex HIV|partner HIV"},
+            {id: "R095", category: "Sexual Risk", question: "Q29", condition: "Received money/drugs for sex", decision: "Permanent", duration: "Permanent", keywords: "prostitution|sex work|paid sex"},
+            {id: "R096", category: "Sexual Risk", question: "Q30", condition: "Sexual contact with sex worker", decision: "Permanent", duration: "Permanent", keywords: "sex worker|prostitute contact"},
+            
+            // Drug Use
+            {id: "R097", category: "Drug Use", question: "Q31", condition: "IV drug use (non-prescribed)", decision: "Permanent", duration: "Permanent", keywords: "IV drugs|injection drugs|needle drugs"},
+            {id: "R098", category: "Drug Use", question: "Q32", condition: "Sexual contact with IV drug user", decision: "Defer", duration: "6 months", keywords: "partner drugs|sex drug user"},
+            
+            // Needlestick & Blood Exposure
+            {id: "R099", category: "Blood Exposure", question: "Q33", condition: "Accidental needlestick", decision: "Defer", duration: "6 months", keywords: "needlestick|needle injury"},
+            {id: "R100", category: "Blood Exposure", question: "Q34", condition: "Contact with someone's blood", decision: "Defer", duration: "6 months", keywords: "blood contact|blood exposure"},
+            
+            // Tattoos & Procedures
+            {id: "R101", category: "Procedures", question: "Q35", condition: "Tattoo or cosmetic needles", decision: "Defer", duration: "6 months", keywords: "tattoo|permanent makeup|microblading|botox|filler"},
+            {id: "R102", category: "Procedures", question: "Q36", condition: "Ear or body piercing", decision: "Defer", duration: "6 months", keywords: "piercing|ear|body"},
+            {id: "R103", category: "Procedures", question: "Q37", condition: "Hijama (wet cupping)", decision: "Defer", duration: "6 months", keywords: "hijama|cupping|wet cupping"},
+            
+            // Transfusions & Transplants
+            {id: "R104", category: "Transfusion", question: "Q38", condition: "Blood transfusion (allogeneic)", decision: "Defer", duration: "6 months", keywords: "transfusion|blood received"},
+            {id: "R105", category: "Transplant", question: "Q39", condition: "Bone or skin graft (allogeneic)", decision: "Defer", duration: "6 months", keywords: "graft|bone|skin"},
+            
+            // Incarceration
+            {id: "R106", category: "Incarceration", question: "Q40", condition: "Incarcerated 72+ hours", decision: "Defer", duration: "12 months", keywords: "jail|prison|detention|lockup"},
+            
+            // Travel
+            {id: "R107", category: "Travel", question: "Q41", condition: "Travel to Ebola area", decision: "Defer", duration: "8 weeks", keywords: "ebola|outbreak area"},
+            {id: "R108", category: "Travel", question: "Q41", condition: "Travel to West Nile area", decision: "Defer", duration: "120 days", keywords: "west nile|WNV"},
+            {id: "R109", category: "Travel", question: "Q42", condition: "Travel to malaria area (>24hrs)", decision: "Defer", duration: "3 months", keywords: "malaria travel|endemic area"},
+            {id: "R110", category: "Travel", question: "Q42", condition: "Resident of malaria area (>5 years)", decision: "Defer", duration: "3 years after departure", keywords: "malaria resident|lived endemic"},
+            {id: "R111", category: "Travel", question: "Q43", condition: "Had malaria", decision: "Defer", duration: "3 years after asymptomatic", keywords: "malaria history|had malaria"},
+            
+            // Other Infections
+            {id: "R112", category: "Infections", question: "Q44", condition: "Brucellosis (Malta fever)", decision: "Permanent", duration: "Permanent", keywords: "brucellosis|malta fever"},
+            {id: "R113", category: "Infections", question: "Q45", condition: "Raw/unpasteurized dairy", decision: "Defer", duration: "2 months", keywords: "raw milk|unpasteurized dairy"},
+            {id: "R114", category: "Infections", question: "Q46", condition: "Dengue fever", decision: "Defer", duration: "4 months", keywords: "dengue|dengue fever"},
+            {id: "R115", category: "Infections", question: "Q47", condition: "Positive Babesia test", decision: "Permanent", duration: "Permanent", keywords: "babesia|babesiosis"},
+            {id: "R116", category: "Infections", question: "Q48", condition: "Chagas disease", decision: "Permanent", duration: "Permanent", keywords: "chagas|trypanosoma cruzi"},
+            
+            // Central/South America
+            {id: "R117", category: "Travel", question: "Q49", condition: "Lived 6+ months in Central/South America", decision: "Permanent", duration: "Permanent", keywords: "central america|south america|mexico lived"},
+            {id: "R118", category: "Travel", question: "Q49", condition: "Blood transfusion in Central/South America", decision: "Permanent", duration: "Permanent", keywords: "transfusion mexico|central south america blood"},
+            {id: "R119", category: "Travel", question: "Q50", condition: "Born in Central/South America", decision: "Permanent", duration: "Permanent", keywords: "born mexico|central south america birth"},
+            {id: "R120", category: "Travel", question: "Q50", condition: "Mother born in Central/South America", decision: "Permanent", duration: "Permanent", keywords: "mother mexico|mother central south america"},
+            
+            // Surgery & Transplants
+            {id: "R121", category: "Surgery", question: "Q51", condition: "Brain surgery with dura mater graft", decision: "Permanent", duration: "Permanent", keywords: "brain surgery|dura mater|CJD"},
+            {id: "R122", category: "Surgery", question: "Q51", condition: "Other brain surgery", decision: "Accept", duration: "None", keywords: "brain surgery other"},
+            {id: "R123", category: "Transplant", question: "Q52", condition: "Organ/tissue transplant (allogeneic)", decision: "Defer", duration: "6 months", keywords: "transplant|organ|tissue|bone marrow|stem cell"},
+            {id: "R124", category: "Transplant", question: "Q52", condition: "Xenotransplantation", decision: "Permanent", duration: "Permanent", keywords: "xenotransplant|animal organ"},
+            
+            // Basic Requirements (from Document 2)
+            {id: "R125", category: "Requirements", question: "Pre", condition: "Age under 18", decision: "Defer", duration: "Until 18 (or 17 with consent)", keywords: "age|minor|under 18"},
+            {id: "R126", category: "Requirements", question: "Pre", condition: "No valid ID", decision: "Defer", duration: "Until ID obtained", keywords: "identification|ID|iqama"},
+            {id: "R127", category: "Requirements", question: "Pre", condition: "Cannot understand Arabic/English", decision: "Defer", duration: "Until interpreter available", keywords: "language|understand|illiterate"},
+            {id: "R128", category: "Requirements", question: "Pre", condition: "Weight under 50kg", decision: "Defer", duration: "Until weight ≥50kg", keywords: "weight|underweight|<50"},
+            
+            // Vital Signs
+            {id: "R129", category: "Vital Signs", question: "Pre", condition: "Temperature >37.5°C oral", decision: "Defer", duration: "Until normal", keywords: "fever|temperature|heat"},
+            {id: "R130", category: "Vital Signs", question: "Pre", condition: "BP systolic <90 or >180", decision: "Defer", duration: "Until normalized", keywords: "blood pressure|hypotension|hypertension"},
+            {id: "R131", category: "Vital Signs", question: "Pre", condition: "BP diastolic <50 or >100", decision: "Defer", duration: "Until normalized", keywords: "blood pressure|diastolic"},
+            {id: "R132", category: "Vital Signs", question: "Pre", condition: "Pulse <50 or >100 or irregular", decision: "Defer", duration: "Until normalized", keywords: "pulse|heart rate|irregular"},
+            
+            // Hemoglobin/Hematocrit
+            {id: "R133", category: "Lab Values", question: "Pre", condition: "Male Hgb <13 g/dL or Hct <39%", decision: "Defer", duration: "Until corrected", keywords: "hemoglobin|hematocrit|anemia male"},
+            {id: "R134", category: "Lab Values", question: "Pre", condition: "Female Hgb <12.5 g/dL or Hct <38%", decision: "Defer", duration: "Until corrected", keywords: "hemoglobin|hematocrit|anemia female"},
+            {id: "R135", category: "Lab Values", question: "Pre", condition: "Ferritin <30 ng/mL (frequent donor)", decision: "Defer", duration: "2 months + treatment", keywords: "ferritin|iron|frequent donor"},
+            
+            // Physical Exam
+            {id: "R136", category: "Physical Exam", question: "Pre", condition: "Signs of IV drug use on arms", decision: "Permanent", duration: "Permanent", keywords: "track marks|IV drug signs|injection sites"},
+            {id: "R137", category: "Physical Exam", question: "Pre", condition: "Skin infection at venipuncture site", decision: "Defer", duration: "Until healed", keywords: "arm infection|venipuncture site"}
+        ];
+
+        // Main Application Component
+        function BloodDonorScreeningApp() {
+            const [activeTab, setActiveTab] = useState('questionnaire');
+            const [searchTerm, setSearchTerm] = useState('');
+            const [selectedCategory, setSelectedCategory] = useState('All');
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [showResults, setShowResults] = useState(false);
+            const [deferralReason, setDeferralReason] = useState('');
+            const [calculatorInput, setCalculatorInput] = useState('');
+            const [calculatorResult, setCalculatorResult] = useState('');
+
+            // Categories for filtering
+            const categories = ['All', ...new Set(COMPLETE_RULES_DATABASE.map(r => r.category))];
+
+            // DHQ Questions
+            const dhqQuestions = [
+                {id: 1, text: "Are you feeling healthy and well to donate blood today?", category: "General Health"},
+                {id: 2, text: "Have you read the blood donor educational materials today?", category: "Education"},
+                {id: 3, text: "Have you ever been refused as a blood donor?", category: "Previous Deferral"},
+                {id: 4, text: "Have you been to the dentist in the past 7 days?", category: "Dental"},
+                {id: 5, text: "Have you had a wound or skin infection in the past 2 weeks?", category: "Infections"},
+                {id: 6, text: "Have you EVER had any type of cancer?", category: "Cancer"},
+                {id: 7, text: "Have you EVER had problems with your heart or lungs?", category: "Medical"},
+                {id: 8, text: "Have you ever had a bleeding condition?", category: "Medical"},
+                {id: 9, text: "Do you have diabetes?", category: "Medical"},
+                {id: 10, text: "For women: Are you pregnant now?", category: "Pregnancy"},
+                {id: 11, text: "For women: Have you ever been pregnant?", category: "Pregnancy"},
+                {id: 12, text: "Are you currently taking any medications?", category: "Medications"},
+                {id: 13, text: "Have you taken medications on the Medication Deferral List?", category: "Medications"},
+                {id: 14, text: "Have you had any vaccinations in the past 8 weeks?", category: "Vaccines"},
+                {id: 15, text: "Have you had contact with someone vaccinated for smallpox?", category: "Vaccines"},
+                {id: 16, text: "Have you donated blood in the past 8 weeks?", category: "Donation History"},
+                {id: 17, text: "Have you donated double red cells in the past 16 weeks?", category: "Donation History"},
+                {id: 18, text: "Have you EVER had a positive test for Hepatitis B or C?", category: "Hepatitis"},
+                {id: 19, text: "Have you had sexual contact with someone with hepatitis (past 6 months)?", category: "Hepatitis"},
+                {id: 20, text: "Have you lived with someone with hepatitis (past 6 months)?", category: "Hepatitis"},
+                {id: 21, text: "Have you had syphilis or gonorrhea (past 3 months)?", category: "STDs"},
+                {id: 22, text: "Have you EVER had a positive HIV test?", category: "HIV"},
+                {id: 23, text: "Have you EVER taken HIV treatment medications?", category: "HIV"},
+                {id: 24, text: "Have you taken HIV prevention medications (PrEP/PEP)?", category: "HIV"},
+                {id: 25, text: "Have you EVER had sexual contact outside of marriage?", category: "Sexual Risk"},
+                {id: 26, text: "Have you EVER had same-gender sexual contact?", category: "Sexual Risk"},
+                {id: 27, text: "Have you had sexual contact in an undocumented marriage (past 12 months)?", category: "Sexual Risk"},
+                {id: 28, text: "Have you had sexual contact with someone HIV+ (past 6 months)?", category: "Sexual Risk"},
+                {id: 29, text: "Have you EVER received money/drugs for sex?", category: "Sexual Risk"},
+                {id: 30, text: "Have you had sexual contact with someone who received money for sex?", category: "Sexual Risk"},
+                {id: 31, text: "Have you EVER used needles for non-prescribed drugs?", category: "Drug Use"},
+                {id: 32, text: "Have you had sexual contact with an IV drug user (past 6 months)?", category: "Drug Use"},
+                {id: 33, text: "Have you had an accidental needlestick (past 6 months)?", category: "Blood Exposure"},
+                {id: 34, text: "Have you had contact with someone's blood (past 6 months)?", category: "Blood Exposure"},
+                {id: 35, text: "Have you had a tattoo or cosmetic needles (past 6 months)?", category: "Procedures"},
+                {id: 36, text: "Have you had ear/body piercing (past 6 months)?", category: "Procedures"},
+                {id: 37, text: "Have you had hijama/wet cupping (past 6 months)?", category: "Procedures"},
+                {id: 38, text: "Have you had a blood transfusion (past 6 months)?", category: "Transfusion"},
+                {id: 39, text: "Have you had a bone/skin graft (past 6 months)?", category: "Transplant"},
+                {id: 40, text: "Have you been incarcerated 72+ hours (past 12 months)?", category: "Incarceration"},
+                {id: 41, text: "Have you been outside Saudi Arabia (past 3 years)?", category: "Travel"},
+                {id: 42, text: "Have you visited/lived in a malaria area (past 3 years)?", category: "Travel"},
+                {id: 43, text: "Have you EVER had malaria?", category: "Infections"},
+                {id: 44, text: "Have you EVER had brucellosis?", category: "Infections"},
+                {id: 45, text: "Have you consumed raw dairy (past 2 months)?", category: "Infections"},
+                {id: 46, text: "Have you had dengue fever (past 4 months)?", category: "Infections"},
+                {id: 47, text: "Have you EVER tested positive for Babesia?", category: "Infections"},
+                {id: 48, text: "Have you EVER had Chagas disease?", category: "Infections"},
+                {id: 49, text: "Have you been to Central/South America?", category: "Travel"},
+                {id: 50, text: "Were you or your mother born in Central/South America?", category: "Travel"},
+                {id: 51, text: "Have you EVER had brain surgery?", category: "Surgery"},
+                {id: 52, text: "Have you had organ/tissue transplant?", category: "Transplant"}
+            ];
+
+            // Filter rules based on search and category
+            const filteredRules = useMemo(() => {
+                return COMPLETE_RULES_DATABASE.filter(rule => {
+                    const matchesSearch = searchTerm === '' || 
+                        rule.condition.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        rule.keywords.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        rule.category.toLowerCase().includes(searchTerm.toLowerCase());
+                    
+                    const matchesCategory = selectedCategory === 'All' || rule.category === selectedCategory;
+                    
+                    return matchesSearch && matchesCategory;
+                });
+            }, [searchTerm, selectedCategory]);
+
+            // Calculate deferral date
+            const calculateDeferralDate = () => {
+                const input = calculatorInput.toLowerCase();
+                const today = new Date();
+                let result = '';
+
+                // Find matching rule
+                const matchingRule = COMPLETE_RULES_DATABASE.find(rule => 
+                    rule.keywords.split('|').some(keyword => 
+                        input.includes(keyword.toLowerCase())
+                    )
+                );
+
+                if (matchingRule) {
+                    if (matchingRule.duration === 'Permanent') {
+                        result = 'Permanent deferral - donor cannot donate';
+                    } else if (matchingRule.duration === 'None') {
+                        result = 'No deferral - donor can donate today';
+                    } else {
+                        // Parse duration
+                        const durationMatch = matchingRule.duration.match(/(\d+)\s*(day|week|month|year)/i);
+                        if (durationMatch) {
+                            const amount = parseInt(durationMatch[1]);
+                            const unit = durationMatch[2].toLowerCase();
+                            const returnDate = new Date(today);
+                            
+                            switch(unit) {
+                                case 'day':
+                                    returnDate.setDate(today.getDate() + amount);
+                                    break;
+                                case 'week':
+                                    returnDate.setDate(today.getDate() + (amount * 7));
+                                    break;
+                                case 'month':
+                                    returnDate.setMonth(today.getMonth() + amount);
+                                    break;
+                                case 'year':
+                                    returnDate.setFullYear(today.getFullYear() + amount);
+                                    break;
+                            }
+                            
+                            result = `Deferral: ${matchingRule.duration}\nCan donate after: ${returnDate.toLocaleDateString()}`;
+                        } else {
+                            result = `Deferral: ${matchingRule.duration}`;
+                        }
+                    }
+                } else {
+                    result = 'No matching deferral rule found. Please check the rules database.';
+                }
+                
+                setCalculatorResult(result);
+            };
+
+            // Check eligibility based on answers
+            const checkEligibility = () => {
+                let deferrals = [];
+                
+                Object.entries(answers).forEach(([questionId, answer]) => {
+                    if (answer === 'yes') {
+                        const question = dhqQuestions.find(q => q.id === parseInt(questionId));
+                        if (question) {
+                            // Find relevant rules for this question
+                            const relevantRules = COMPLETE_RULES_DATABASE.filter(rule => 
+                                rule.question === `Q${questionId}`
+                            );
+                            
+                            if (relevantRules.length > 0) {
+                                relevantRules.forEach(rule => {
+                                    if (rule.decision !== 'Accept') {
+                                        deferrals.push({
+                                            question: question.text,
+                                            reason: rule.condition,
+                                            duration: rule.duration,
+                                            type: rule.decision
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+                
+                if (deferrals.length > 0) {
+                    // Find the most severe deferral
+                    const permanentDeferral = deferrals.find(d => d.type === 'Permanent');
+                    if (permanentDeferral) {
+                        setDeferralReason(`PERMANENT DEFERRAL: ${permanentDeferral.reason}`);
+                    } else {
+                        const reasons = deferrals.map(d => `${d.reason} (${d.duration})`).join('; ');
+                        setDeferralReason(`TEMPORARY DEFERRAL: ${reasons}`);
+                    }
+                } else {
+                    setDeferralReason('ELIGIBLE TO DONATE');
+                }
+                
+                setShowResults(true);
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-100">
+                    {/* Header */}
+                    <header className="bg-red-700 text-white py-6 shadow-lg">
+                        <div className="max-w-7xl mx-auto px-4">
+                            <h1 className="text-3xl font-bold">🩸 Blood Donor Eligibility Screening System</h1>
+                            <p className="text-red-200 mt-2">Saudi Arabian Blood Donation Guidelines • {COMPLETE_RULES_DATABASE.length} Rules</p>
+                        </div>
+                    </header>
+
+                    {/* Navigation Tabs */}
+                    <div className="bg-white shadow-sm sticky top-0 z-10">
+                        <div className="max-w-7xl mx-auto px-4">
+                            <div className="flex space-x-8 py-4">
+                                <button
+                                    onClick={() => setActiveTab('questionnaire')}
+                                    className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+                                        activeTab === 'questionnaire' 
+                                        ? 'border-red-600 text-red-600' 
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    📋 Screening Questionnaire
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('rules')}
+                                    className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+                                        activeTab === 'rules' 
+                                        ? 'border-red-600 text-red-600' 
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    📚 Rules Database
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('calculator')}
+                                    className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+                                        activeTab === 'calculator' 
+                                        ? 'border-red-600 text-red-600' 
+                                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    }`}
+                                >
+                                    🗓️ Deferral Calculator
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <main className="max-w-7xl mx-auto px-4 py-8">
+                        {/* Questionnaire Tab */}
+                        {activeTab === 'questionnaire' && (
+                            <div className="space-y-6">
+                                {!showResults ? (
+                                    <div className="bg-white rounded-lg shadow p-6">
+                                        <h2 className="text-2xl font-bold mb-4">Donor History Questionnaire</h2>
+                                        <div className="mb-4">
+                                            <div className="flex justify-between text-sm text-gray-600 mb-2">
+                                                <span>Question {currentQuestion + 1} of {dhqQuestions.length}</span>
+                                                <span>{dhqQuestions[currentQuestion].category}</span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                                <div 
+                                                    className="bg-red-600 h-2 rounded-full"
+                                                    style={{width: `${((currentQuestion + 1) / dhqQuestions.length) * 100}%`}}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="py-8">
+                                            <h3 className="text-lg font-medium mb-4">
+                                                {dhqQuestions[currentQuestion].text}
+                                            </h3>
+                                            
+                                            <div className="space-y-3">
+                                                <button
+                                                    onClick={() => {
+                                                        setAnswers({...answers, [dhqQuestions[currentQuestion].id]: 'yes'});
+                                                        if (currentQuestion < dhqQuestions.length - 1) {
+                                                            setCurrentQuestion(currentQuestion + 1);
+                                                        } else {
+                                                            checkEligibility();
+                                                        }
+                                                    }}
+                                                    className="w-full text-left p-4 border-2 border-gray-300 rounded-lg hover:border-red-500 hover:bg-red-50"
+                                                >
+                                                    Yes
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setAnswers({...answers, [dhqQuestions[currentQuestion].id]: 'no'});
+                                                        if (currentQuestion < dhqQuestions.length - 1) {
+                                                            setCurrentQuestion(currentQuestion + 1);
+                                                        } else {
+                                                            checkEligibility();
+                                                        }
+                                                    }}
+                                                    className="w-full text-left p-4 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50"
+                                                >
+                                                    No
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between mt-6">
+                                            <button
+                                                onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+                                                disabled={currentQuestion === 0}
+                                                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+                                            >
+                                                Previous
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setCurrentQuestion(0);
+                                                    setAnswers({});
+                                                }}
+                                                className="px-4 py-2 bg-gray-500 text-white rounded"
+                                            >
+                                                Reset
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white rounded-lg shadow p-6">
+                                        <h2 className="text-2xl font-bold mb-4">Eligibility Results</h2>
+                                        <div className={`p-6 rounded-lg ${
+                                            deferralReason.includes('ELIGIBLE') 
+                                            ? 'bg-green-100 text-green-800'
+                                            : deferralReason.includes('PERMANENT')
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                            <h3 className="text-xl font-bold mb-2">
+                                                {deferralReason.includes('ELIGIBLE') ? '✅ ' : '⚠️ '}
+                                                {deferralReason}
+                                            </h3>
+                                        </div>
+                                        
+                                        <button
+                                            onClick={() => {
+                                                setShowResults(false);
+                                                setCurrentQuestion(0);
+                                                setAnswers({});
+                                                setDeferralReason('');
+                                            }}
+                                            className="mt-6 px-6 py-3 bg-red-600 text-white rounded-lg"
+                                        >
+                                            Start New Screening
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Rules Database Tab */}
+                        {activeTab === 'rules' && (
+                            <div className="space-y-6">
+                                {/* Search and Filter */}
+                                <div className="bg-white rounded-lg shadow p-4">
+                                    <div className="flex flex-col md:flex-row gap-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Search rules..."
+                                            className="flex-1 p-2 border rounded"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                        <select
+                                            className="p-2 border rounded"
+                                            value={selectedCategory}
+                                            onChange={(e) => setSelectedCategory(e.target.value)}
+                                        >
+                                            {categories.map(cat => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-2">
+                                        Showing {filteredRules.length} of {COMPLETE_RULES_DATABASE.length} rules
+                                    </p>
+                                </div>
+
+                                {/* Rules Table */}
+                                <div className="bg-white rounded-lg shadow overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Decision</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                                {filteredRules.map(rule => (
+                                                    <tr key={rule.id} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 text-sm">{rule.id}</td>
+                                                        <td className="px-4 py-3 text-sm">{rule.category}</td>
+                                                        <td className="px-4 py-3 text-sm">{rule.condition}</td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`deferral-badge ${
+                                                                rule.decision === 'Accept' ? 'accept' :
+                                                                rule.decision === 'Permanent' ? 'defer-perm' :
+                                                                rule.decision.includes('Medical') ? 'defer-conditional' :
+                                                                'defer-temp'
+                                                            }`}>
+                                                                {rule.decision}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm">{rule.duration}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Calculator Tab */}
+                        {activeTab === 'calculator' && (
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h2 className="text-2xl font-bold mb-4">Deferral Date Calculator</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
+                                            Enter condition or keyword:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            className="w-full p-3 border rounded-lg"
+                                            placeholder="e.g., dental implant, tattoo, malaria..."
+                                            value={calculatorInput}
+                                            onChange={(e) => setCalculatorInput(e.target.value)}
+                                        />
+                                    </div>
+                                    
+                                    <button
+                                        onClick={calculateDeferralDate}
+                                        className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                                    >
+                                        Calculate Return Date
+                                    </button>
+                                    
+                                    {calculatorResult && (
+                                        <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+                                            <pre className="whitespace-pre-wrap">{calculatorResult}</pre>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="bg-gray-800 text-white py-6 mt-12">
+                        <div className="max-w-7xl mx-auto px-4 text-center">
+                            <p className="text-gray-400">
+                                Blood Donor Eligibility Screening System • Saudi Arabian Guidelines
+                            </p>
+                            <p className="text-gray-500 text-sm mt-2">
+                                Database contains {COMPLETE_RULES_DATABASE.length} rules covering all DHQ questions, medications, vaccines, and conditions
+                            </p>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<BloodDonorScreeningApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
