@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blood Donor Screening - Saudi National Blood Bank</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+// Simple icon components using emoji
+const Search = (p) => <span className={p.className} style={{display:'inline-flex'}}>🔍</span>;
+const ChevronRight = (p) => <span className={p.className} style={{display:'inline-flex',transition:'transform 0.2s'}}>â–¶</span>;
+const ChevronLeft = (p) => <span className={p.className} style={{display:'inline-flex'}}>â—€</span>;
+const Check = (p) => <span className={p.className} style={{display:'inline-flex'}}>✓</span>;
+const X = (p) => <span className={p.className} style={{display:'inline-flex'}}>✗</span>;
+const AlertTriangle = (p) => <span className={p.className} style={{display:'inline-flex'}}>⚠️</span>;
+const Clock = (p) => <span className={p.className} style={{display:'inline-flex'}}>⏱️</span>;
+const FileText = (p) => <span className={p.className} style={{display:'inline-flex'}}>📄</span>;
+const Database = (p) => <span className={p.className} style={{display:'inline-flex'}}>🗃️</span>;
+const Heart = (p) => <span className={p.className} style={{display:'inline-flex'}}>❤️</span>;
+const Globe = (p) => <span className={p.className} style={{display:'inline-flex'}}>🌐</span>;
+const Filter = (p) => <span className={p.className} style={{display:'inline-flex'}}>🔽</span>;
+const RefreshCw = (p) => <span className={p.className} style={{display:'inline-flex'}}>🔄</span>;
+const Info = (p) => <span className={p.className} style={{display:'inline-flex'}}>ℹ️</span>;
+const Calendar = (p) => <span className={p.className} style={{display:'inline-flex'}}>📅</span>;
+const ExternalLink = (p) => <span className={p.className} style={{display:'inline-flex'}}>↗️</span>;
+
+// React loaded via CDN
+// Icons loaded via CDN
+
+const RULES_DATA = {"metadata": {"title": "Saudi Blood Donor Eligibility Rules Database", "version": "1.1", "version_date": "2026-01-02T16:44:47.753334", "based_on": "Saudi National DHQ v1.0 (2025)", "source_documents": ["Questionnaire_001.docx - Donor History Questionnaire", "Manual_003.docx - Instructions for blood bank staff", "medication_list_002.docx - Medication Deferral List"], "total_rules": 139, "revision_notes": "Version 1.1 includes: Added missing medications (Dalteparin, Edoxaban), added reference URLs, fixed Q1 logic, added followup questions for Q5, Q6, Q51, added TRALI notes, added sexual contact definitions"}, "rules": [{"question_number": "REQ-1", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Age ≥18 years (17-18 with parental consent)", "question_text_ar": "ألا يقل العمر عن ١٨ عاماً", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "all", "rule_id": "R001"}, {"question_number": "REQ-2", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Valid Saudi ID or Iqama", "question_text_ar": "الهوية الوطنية أو الإقامة سارية", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "all", "rule_id": "R002"}, {"question_number": "REQ-3", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Understands Arabic or English", "question_text_ar": "فهم العربية أو الإنجليزية", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "all", "rule_id": "R003"}, {"question_number": "REQ-4", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Hgb ≥13, Hct ≥39% (males)", "question_text_ar": "هيموجلوبين ≥١٣، هيماتوكريت ≥٣٩٪", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "male", "rule_id": "R004"}, {"question_number": "REQ-5", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Hgb ≥12.5, Hct ≥38% (females)", "question_text_ar": "هيموجلوبين ≥١٢.٥، هيماتوكريت ≥٣٨٪", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "female", "rule_id": "R005"}, {"question_number": "REQ-6", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Ferritin ≥30 if 4+ donations/year", "question_text_ar": "فيريتين ≥٣٠ إذا Ù¤+ تبرعات/سنة", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "all", "rule_id": "R006"}, {"question_number": "REQ-7", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Temperature ≤37.5°C oral", "question_text_ar": "الحرارة ≤Ù£Ù§.Ù¥ درجة", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "all", "rule_id": "R007"}, {"question_number": "REQ-8", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "BP: Sys 90-180, Dia 50-100", "question_text_ar": "الضغط: انقباضي ٩٠-١٨٠، انبساطي ٥٠-١٠٠", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "all", "rule_id": "R008"}, {"question_number": "REQ-9", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Pulse 50-100 bpm, regular", "question_text_ar": "النبض ٥٠-١٠٠، منتظم", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "all", "rule_id": "R009"}, {"question_number": "REQ-10", "parent_rule_id": null, "node_type": "requirement", "is_followup": false, "trigger_answer": null, "question_text_en": "Weight ≥50 kg", "question_text_ar": "الوزن ≥٥٠ كجم", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "DEFER", "next_if_yes": null, "next_if_no": null, "rationale_en": "Basic eligibility requirement", "category": "general_eligibility", "applies_to": "all", "rule_id": "R010"}, {"question_number": "Q1", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Are you feeling healthy and well to donate blood today?", "question_text_ar": "هل تشعر أنك بصحة جيدة للتبرع؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CONTINUE_SCREENING", "outcome_if_no": "EVALUATE_UNDERLYING_CONDITION", "next_if_yes": "Q2", "next_if_no": null, "rationale_en": "Assessment for general_health", "category": "general_health", "applies_to": "all", "rule_id": "R011"}, {"question_number": "Q2", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you read the blood donor educational materials today?", "question_text_ar": "هل اطلعت على المواد التثقيفية؟", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Assessment for general_health", "category": "general_health", "applies_to": "all", "rule_id": "R012"}, {"question_number": "Q3", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you ever been refused as a blood donor?", "question_text_ar": "هل سبق منعك من التبرع؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "EVALUATE", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Assessment for general_health", "category": "general_health", "applies_to": "all", "rule_id": "R013"}, {"question_number": "Q4", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you been to the dentist for a procedure in the past 7 days?", "question_text_ar": "هل زرت طبيب الأسنان خلال آخر Ù§ أيام؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CHECK_PROCEDURE_TYPE", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q4.1", "next_if_no": "Q5", "rationale_en": "Deferral depends on procedure invasiveness", "category": "dental", "applies_to": "all", "rule_id": "R014"}, {"question_number": "Q4.1a", "parent_rule_id": "R014", "node_type": "followup_option", "is_followup": true, "trigger_answer": "YES", "question_text_en": "No deferral: Ortho wire adjustment, Fluoride, Superficial cleaning, Appliance delivery", "question_text_ar": "بدون تأجيل: تعديل التقويم، الفلورايد، التنظيف", "deferral_type": "none", "deferral_duration": 0, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": "Q5", "next_if_no": null, "rationale_en": "Non-invasive procedures", "category": "dental", "applies_to": "all", "rule_id": "R015"}, {"question_number": "Q4.1b", "parent_rule_id": "R014", "node_type": "followup_option", "is_followup": true, "trigger_answer": "YES", "question_text_en": "24-hour deferral: Ortho band, Restorative/fillings, Simple root canal, Crown/bridge prep, Other non-surgical", "question_text_ar": "تأجيل ٢٤ ساعة: حلقات التقويم، حشوات، علاج عصب بسيط", "deferral_type": "temporary", "deferral_duration": 24, "deferral_unit": "hours", "outcome_if_yes": "DEFER_24H", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Minor invasive procedures", "category": "dental", "applies_to": "all", "rule_id": "R016"}, {"question_number": "Q4.1c", "parent_rule_id": "R014", "node_type": "followup_option", "is_followup": true, "trigger_answer": "YES", "question_text_en": "7-day deferral: Extractions, Biopsy, Surgical root canal, Dental implant, Surgical procedures", "question_text_ar": "تأجيل Ù§ أيام: خلع، خزعة، زراعة، جراحات", "deferral_type": "temporary", "deferral_duration": 7, "deferral_unit": "days", "outcome_if_yes": "DEFER_7D", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Surgical/invasive procedures", "category": "dental", "applies_to": "all", "rule_id": "R017"}, {"question_number": "Q5", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you had a wound or skin infection in the past 2 weeks?", "question_text_ar": "هل أصبت بجرح أو التهاب جلدي خلال أسبوعين؟", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "weeks", "outcome_if_yes": "CHECK_ANTIBIOTIC_USE", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q5.1", "next_if_no": "Q6", "rationale_en": "2 weeks after healing; 4 weeks if antibiotics used", "category": "general_health", "applies_to": "all", "rule_id": "R018"}, {"question_number": "Q6", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had any type of cancer, including leukemia?", "question_text_ar": "هل شُخصت بأي نوع من السرطان؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "EVALUATE_PER_SOP", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q6.1", "next_if_no": "Q7", "rationale_en": "Hematological=permanent; Others=12 months if cancer-free", "category": "medical_history", "applies_to": "all", "rule_id": "R019"}, {"question_number": "Q6.1", "parent_rule_id": "R019", "node_type": "followup_decision", "is_followup": true, "trigger_answer": "YES", "question_text_en": "Is/was the cancer hematological (blood cancer like leukemia, lymphoma, myeloma)?", "question_text_ar": "هل السرطان دموي (سرطان الدم، ليمفوما، ورم نقوي)ØŸ", "deferral_type": "variable", "deferral_duration": 12, "deferral_unit": "months", "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "CHECK_TREATMENT_STATUS", "next_if_yes": null, "next_if_no": "Q6.2", "rationale_en": "Based on cancer type and treatment status", "category": "medical_history", "applies_to": "all", "rule_id": "R020"}, {"question_number": "Q7", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had any problems with your heart or lungs?", "question_text_ar": "هل شُخصت بمشكلة في القلب أو الرئتين؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "EVALUATE_PER_SOP", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q8", "rationale_en": "Per physician judgment", "category": "medical_history", "applies_to": "all", "rule_id": "R021"}, {"question_number": "Q8", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you ever had a bleeding condition or blood disease?", "question_text_ar": "هل شُخصت بسيولة الدم أو مرض دموي؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_INDEFINITE", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q9", "rationale_en": "Hemophilia/clotting deficiency = permanent (donor safety)", "category": "medical_history", "applies_to": "all", "rule_id": "R022"}, {"question_number": "Q9", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Do you have diabetes?", "question_text_ar": "هل أنت مصاب بالسكري؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CONTINUE_Q9.1", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q9.1", "next_if_no": "Q10", "rationale_en": "Additional assessment for severity", "category": "diabetes", "applies_to": "all", "rule_id": "R023"}, {"question_number": "Q9.1", "parent_rule_id": "R023", "node_type": "followup_question", "is_followup": true, "trigger_answer": "YES", "question_text_en": "Do you have dizziness when standing, or ulcers on foot/leg?", "question_text_ar": "هل تعاني من دوخة عند الوقوف أو تقرحات في قدمك؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "CONTINUE_Q9.2", "next_if_yes": null, "next_if_no": "Q9.2", "rationale_en": "Diabetic complications = permanent deferral", "category": "diabetes", "applies_to": "all", "rule_id": "R024"}, {"question_number": "Q9.2", "parent_rule_id": "R023", "node_type": "followup_question", "is_followup": true, "trigger_answer": "NO_Q9.1", "question_text_en": "Acute episode in past 3 months (needed help or ER visit)?", "question_text_ar": "نوبة حادة في آخر Ù£ أشهر (احتجت مساعدة أو طوارئ)ØŸ", "deferral_type": "temporary", "deferral_duration": 3, "deferral_unit": "months", "outcome_if_yes": "DEFER_3_MONTHS", "outcome_if_no": "CONTINUE_Q9.3", "next_if_yes": null, "next_if_no": "Q9.3", "rationale_en": "Recent acute episode = 3 month deferral", "category": "diabetes", "applies_to": "all", "rule_id": "R025"}, {"question_number": "Q9.3", "parent_rule_id": "R023", "node_type": "followup_question", "is_followup": true, "trigger_answer": "NO_Q9.2", "question_text_en": "Have you eaten in the past 2 hours?", "question_text_ar": "هل تناولت الطعام خلال ساعتين؟", "deferral_type": "action_required", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "ASK_TO_EAT", "next_if_yes": "Q10", "next_if_no": null, "rationale_en": "Prevent hypoglycemia during donation", "category": "diabetes", "applies_to": "all", "rule_id": "R026"}, {"question_number": "Q10", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "For women only: Are you pregnant now?", "question_text_ar": "للسيدات: هل أنتِ حامل الآن؟", "deferral_type": "temporary", "deferral_duration": 9, "deferral_unit": "months", "outcome_if_yes": "DEFER_9M_AFTER_PREGNANCY_END", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q11", "rationale_en": "9 months after pregnancy end", "category": "pregnancy", "applies_to": "female", "rule_id": "R027", "reference_urls": {"url": "https://www.who.int/campaigns/world-blood-donor-day/2019/who-can-give-blood", "source": "WHO"}}, {"question_number": "Q11", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "For women only: Have you EVER been pregnant?", "question_text_ar": "للسيدات: هل سبق لك الحمل؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CONTINUE_Q11.1", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q11.1", "next_if_no": "Q12", "rationale_en": "Assess recency (9 months post-pregnancy) and TRALI risk. Female donors with previous pregnancies may develop antibodies causing transfusion-related acute lung injury (TRALI). SOPs should include TRALI risk mitigation strategy.", "category": "pregnancy", "applies_to": "female", "rule_id": "R028", "reference_urls": {"url": "https://www.who.int/campaigns/world-blood-donor-day/2019/who-can-give-blood", "source": "WHO"}, "trali_note": "Multiparous donors (those with previous pregnancies) are at risk for developing HLA antibodies that can cause TRALI in recipients. Blood establishments should have TRALI mitigation policies."}, {"question_number": "Q11.1", "parent_rule_id": "R028", "node_type": "followup_question", "is_followup": true, "trigger_answer": "YES", "question_text_en": "Have you been pregnant in the past 9 months?", "question_text_ar": "هل كنتِ حاملاً خلال Ù© أشهر الماضية؟", "deferral_type": "temporary", "deferral_duration": 9, "deferral_unit": "months", "outcome_if_yes": "CONTINUE_Q11.2", "outcome_if_no": "TRALI_RESTRICTION", "next_if_yes": "Q11.2", "next_if_no": "Q12", "rationale_en": "Recent pregnancy check + TRALI for past pregnancies", "category": "pregnancy", "applies_to": "female", "rule_id": "R029"}, {"question_number": "Q11.2", "parent_rule_id": "R028", "node_type": "followup_question", "is_followup": true, "trigger_answer": "YES_Q11.1", "question_text_en": "Are you breastfeeding?", "question_text_ar": "هل ترضعين حالياً؟", "deferral_type": "temporary", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_DURING_BF", "outcome_if_no": "DEFER_9M_FROM_PREGNANCY_END", "next_if_yes": null, "next_if_no": null, "rationale_en": "Defer during breastfeeding", "category": "pregnancy", "applies_to": "female", "rule_id": "R030"}, {"question_number": "Q12", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Are you currently taking any medications?", "question_text_ar": "هل تستخدم أي أدوية حالياً؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "EVALUATE_REASON", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q13", "next_if_no": "Q13", "rationale_en": "Evaluate reason for medication", "category": "medications", "applies_to": "all", "rule_id": "R031"}, {"question_number": "Q13", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you taken any medications on the Medication Deferral List?", "question_text_ar": "هل استخدمت أدوية من قائمة التأجيل؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CHECK_SPECIFIC_MED", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q14", "rationale_en": "Specific deferrals per medication", "category": "medications", "applies_to": "all", "rule_id": "R032", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M01", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Antibiotics/antivirals/antifungals", "question_text_ar": "المضادات الحيوية", "deferral_type": "temporary", "deferral_duration": 1, "deferral_unit": "months", "outcome_if_yes": "DEFER_1_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R033", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M02", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Aspirin", "question_text_ar": "أسبرين", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R034", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M03", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Piroxicam (Feldene)", "question_text_ar": "فيلدين", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R035", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M04", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Prasugrel (Effient)", "question_text_ar": "إيفينت", "deferral_type": "temporary", "deferral_duration": 3, "deferral_unit": "days", "outcome_if_yes": "DEFER_3_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R036", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M05", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Ticagrelor (Brilinta)", "question_text_ar": "بريلينتا", "deferral_type": "temporary", "deferral_duration": 7, "deferral_unit": "days", "outcome_if_yes": "DEFER_7_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R037", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M06", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Clopidogrel (Plavix)", "question_text_ar": "بلافيكس", "deferral_type": "temporary", "deferral_duration": 14, "deferral_unit": "days", "outcome_if_yes": "DEFER_14_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R038", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M07", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Ticlopidine (Ticlid)", "question_text_ar": "تيكليد", "deferral_type": "temporary", "deferral_duration": 14, "deferral_unit": "days", "outcome_if_yes": "DEFER_14_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R039", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M08", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Vorapaxar (Zontivity)", "question_text_ar": "زونتيفيتي", "deferral_type": "temporary", "deferral_duration": 1, "deferral_unit": "months", "outcome_if_yes": "DEFER_1_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R040", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M09", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Fondaparinux (Arixtra)", "question_text_ar": "أريكسترا", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R041", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M10", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Apixaban (Eliquis)", "question_text_ar": "إليكويس", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R042", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M11", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Enoxaparin (Lovenox)", "question_text_ar": "لوفينوكس", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R043", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M12", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Dabigatran (Pradaxa)", "question_text_ar": "براداكسا", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R044", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M13", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Rivaroxaban (Xarelto)", "question_text_ar": "زاريلتو", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R045", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M14", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Warfarin (Coumadin)", "question_text_ar": "كومادين", "deferral_type": "temporary", "deferral_duration": 7, "deferral_unit": "days", "outcome_if_yes": "DEFER_7_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R046", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M15", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Heparin/LMWH", "question_text_ar": "الهيبارين", "deferral_type": "temporary", "deferral_duration": 7, "deferral_unit": "days", "outcome_if_yes": "DEFER_7_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R047", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M16", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Isotretinoin (Accutane/Roaccutane)", "question_text_ar": "روأكيوتان", "deferral_type": "temporary", "deferral_duration": 1, "deferral_unit": "months", "outcome_if_yes": "DEFER_1_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R048", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M17", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Finasteride (Propecia/Proscar)", "question_text_ar": "بروبيشيا/بروسكار", "deferral_type": "temporary", "deferral_duration": 1, "deferral_unit": "months", "outcome_if_yes": "DEFER_1_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R049", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M18", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Dutasteride (Avodart)", "question_text_ar": "أفودارت", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R050", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M19", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Acitretin (Soriatane)", "question_text_ar": "سورياتان", "deferral_type": "temporary", "deferral_duration": 36, "deferral_unit": "months", "outcome_if_yes": "DEFER_36_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R051", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M20", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Etretinate (Tegison)", "question_text_ar": "تيجيسون", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R052", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M21", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Thalidomide/Lenalidomide", "question_text_ar": "ثالوميد/ريفليميد", "deferral_type": "temporary", "deferral_duration": 1, "deferral_unit": "months", "outcome_if_yes": "DEFER_1_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R053", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M22", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Teriflunomide (Aubagio)", "question_text_ar": "أوباجيو", "deferral_type": "temporary", "deferral_duration": 24, "deferral_unit": "months", "outcome_if_yes": "DEFER_24_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R054", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M23", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Leflunomide (Arava)", "question_text_ar": "أرافا", "deferral_type": "temporary", "deferral_duration": 24, "deferral_unit": "months", "outcome_if_yes": "DEFER_24_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R055", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M24", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Mycophenolate (Cellcept)", "question_text_ar": "سيلسيبت", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "weeks", "outcome_if_yes": "DEFER_6_WEEKS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R056", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M25", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Upadacitinib (Rinvoq)", "question_text_ar": "رينفوك", "deferral_type": "temporary", "deferral_duration": 1, "deferral_unit": "months", "outcome_if_yes": "DEFER_1_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R057", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M26", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Vismodegib (Erivedge)", "question_text_ar": "إيريفيدج", "deferral_type": "temporary", "deferral_duration": 24, "deferral_unit": "months", "outcome_if_yes": "DEFER_24_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R058", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M27", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Sonidegib (Odomzo)", "question_text_ar": "أودومزو", "deferral_type": "temporary", "deferral_duration": 24, "deferral_unit": "months", "outcome_if_yes": "DEFER_24_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R059", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M28", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Oral PrEP/PEP (Truvada, etc)", "question_text_ar": "أدوية الوقاية من الإيدز الفموية", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R060", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M29", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Injectable PrEP (Cabotegravir)", "question_text_ar": "أدوية الوقاية بالحقن", "deferral_type": "temporary", "deferral_duration": 24, "deferral_unit": "months", "outcome_if_yes": "DEFER_24_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R061", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M30", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "ART (HIV treatment)", "question_text_ar": "علاج الإيدز", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R062", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M31", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "HBIG (Hepatitis B Immune Globulin)", "question_text_ar": "الأجسام المضادة للكبد ب", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R063", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M32", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Experimental medications/vaccines", "question_text_ar": "أدوية/لقاحات تجريبية", "deferral_type": "temporary", "deferral_duration": 12, "deferral_unit": "months", "outcome_if_yes": "DEFER_12_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Medication-specific deferral", "category": "medications", "applies_to": "all", "rule_id": "R064", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q14", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In the past 8 weeks, have you had any vaccinations?", "question_text_ar": "هل تلقيت لقاحات خلال Ù¨ أسابيع؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CHECK_VACCINE_TYPE", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q14.1", "next_if_no": "Q15", "rationale_en": "Deferral depends on vaccine type", "category": "vaccinations", "applies_to": "all", "rule_id": "R065", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V01", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "Live attenuated (Rubella, Varicella)", "question_text_ar": "حية مضعفة (الحصبة الألمانية، الجدري المائي)", "deferral_type": "temporary", "deferral_duration": 4, "deferral_unit": "weeks", "outcome_if_yes": "DEFER_4_WEEKS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R066", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V02", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "Live attenuated (Measles, Mumps, Polio oral, Typhoid oral, Yellow fever)", "question_text_ar": "حية مضعفة (الحصبة، النكاف، شلل أطفال فموي)", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "weeks", "outcome_if_yes": "DEFER_2_WEEKS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R067", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V03", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "Jynneos (Smallpox/Mpox - non-replicating)", "question_text_ar": "جينيوس (الجدري/جدري القرود - غير متكاثر)", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": "Q15", "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R068", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V04", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "Smallpox vaccinia (replication competent)", "question_text_ar": "جدري فاكسينيا (متكاثر)", "deferral_type": "special", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "SPECIAL_ASSESSMENT", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R069", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V05", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "COVID-19 (non-replicating/mRNA)", "question_text_ar": "كوفيد-١٩ (غير متكاثر/mRNA)", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": "Q15", "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R070", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V06", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "COVID-19 (live attenuated)", "question_text_ar": "كوفيد-١٩ (حي مضعف)", "deferral_type": "temporary", "deferral_duration": 14, "deferral_unit": "days", "outcome_if_yes": "DEFER_14_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R071", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V07", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "COVID-19 (unknown type)", "question_text_ar": "كوفيد-١٩ (نوع غير معروف)", "deferral_type": "temporary", "deferral_duration": 14, "deferral_unit": "days", "outcome_if_yes": "DEFER_14_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R072", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V08", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "Toxoids/killed vaccines (if symptom-free)", "question_text_ar": "ذيفانات/لقاحات ميتة (إذا خالٍ من الأعراض)", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": "Q15", "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R073", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V09", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "Recombinant vaccines (HPV, Shingrix)", "question_text_ar": "لقاحات مؤتلفة (HPVØŒ شينغريكس)", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": "Q15", "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R074", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V10", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "Intranasal flu (live attenuated)", "question_text_ar": "إنفلونزا أنفية (حية مضعفة)", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": "Q15", "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R075", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q14.V11", "parent_rule_id": "R065", "node_type": "vaccine_deferral", "is_followup": true, "trigger_answer": "VACCINE", "question_text_en": "Vaxchora (oral cholera)", "question_text_ar": "فاكسكورا (كوليرا فموية)", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": "Q15", "next_if_no": null, "rationale_en": "Vaccine-specific deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R076", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Vaccine Deferral List"}, {"url": "https://www.cdc.gov/vaccines/", "source": "CDC - Vaccines & Immunizations"}]}}, {"question_number": "Q15", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In the past 8 weeks, have you had contact with someone vaccinated for smallpox?", "question_text_ar": "هل خالطت شخصاً تلقى لقاح الجدري خلال Ù¨ أسابيع؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CHECK_JYNNEOS_AND_COMPLICATIONS", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q15.1", "next_if_no": "Q16", "rationale_en": "Exposure to live vaccine site may transmit infection", "category": "vaccinations", "applies_to": "all", "rule_id": "R077"}, {"question_number": "Q15.1", "parent_rule_id": "R077", "node_type": "followup_question", "is_followup": true, "trigger_answer": "YES", "question_text_en": "Was the contact vaccinated with Jynneos (non-replicating)?", "question_text_ar": "هل تلقى الشخص لقاح جينيوس (غير متكاثر)ØŸ", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": "CHECK_COMPLICATIONS", "next_if_yes": "Q16", "next_if_no": "Q15.2", "rationale_en": "Jynneos is non-replicating - no deferral", "category": "vaccinations", "applies_to": "all", "rule_id": "R078"}, {"question_number": "Q15.2", "parent_rule_id": "R077", "node_type": "followup_question", "is_followup": true, "trigger_answer": "NO_JYNNEOS", "question_text_en": "Did you have contact with vaccination site/bandages, or develop complications (rash, necrosis, encephalitis, eye infection)?", "question_text_ar": "هل لامست موقع التطعيم أو الضمادات، أو ظهرت مضاعفات (طفح، نخر، التهاب دماغ، عدوى عين)ØŸ", "deferral_type": "temporary", "deferral_duration": 56, "deferral_unit": "days", "outcome_if_yes": "DEFER_56_DAYS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q16", "rationale_en": "56 days if direct contact or complications", "category": "vaccinations", "applies_to": "all", "rule_id": "R079"}, {"question_number": "Q16", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In the past 8 weeks, have you donated blood, platelets, or plasma?", "question_text_ar": "هل تبرعت بالدم أو الصفائح أو البلازما خلال Ù¨ أسابيع؟", "deferral_type": "temporary", "deferral_duration": 8, "deferral_unit": "weeks", "outcome_if_yes": "DEFER_8_WEEKS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q17", "rationale_en": "Whole blood: 8 weeks minimum between donations", "category": "donation_history", "applies_to": "all", "rule_id": "R080"}, {"question_number": "Q17", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In the past 16 weeks, have you donated a double unit of red blood cells by apheresis?", "question_text_ar": "هل تبرعت بوحدتين من كريات الدم الحمراء بالفصادة خلال ١٦ أسبوع؟", "deferral_type": "temporary", "deferral_duration": 16, "deferral_unit": "weeks", "outcome_if_yes": "DEFER_16_WEEKS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q18", "rationale_en": "Double red cell donation: 16 weeks minimum", "category": "donation_history", "applies_to": "all", "rule_id": "R081"}, {"question_number": "Q18", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had a positive test for hepatitis B or C?", "question_text_ar": "هل كان تحليل فيروس الكبد ب أو ج إيجابياً؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: hepatitis", "category": "hepatitis", "applies_to": "all", "rule_id": "R082"}, {"question_number": "Q19", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In the past 6 months, sexual contact with person who has hepatitis?", "question_text_ar": "علاقة جنسية مع مصاب بالتهاب الكبد خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R083", "definition_note": "Sexual contact is defined as vaginal sex (contact between penis and vagina), oral sex (mouth or tongue on someone's vagina, penis, or anus), or anal sex (contact between penis and anus) regardless of whether or not medications, condoms or other protection were used."}, {"question_number": "Q20", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In the past 6 months, lived with person who has hepatitis?", "question_text_ar": "عشت مع مصاب بالتهاب الكبد خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R084"}, {"question_number": "Q21", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In the past 3 months, had syphilis or gonorrhea or treatment?", "question_text_ar": "الزهري أو السيلان أو علاجهما خلال Ù£ أشهر؟", "deferral_type": "temporary", "deferral_duration": 3, "deferral_unit": "months", "outcome_if_yes": "DEFER_3_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: sti", "category": "sti", "applies_to": "all", "rule_id": "R085"}, {"question_number": "Q22", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had a positive test for HIV?", "question_text_ar": "هل كان تحليل الإيدز إيجابياً؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: hiv", "category": "hiv", "applies_to": "all", "rule_id": "R086"}, {"question_number": "Q23", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER taken medication to treat HIV?", "question_text_ar": "هل استخدمت علاج الإيدز؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: hiv", "category": "hiv", "applies_to": "all", "rule_id": "R087"}, {"question_number": "Q24", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you ever received medication to prevent HIV (PrEP or PEP)?", "question_text_ar": "هل استخدمت دواء للوقاية من الإيدز؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CHECK_REASON_FOR_USE", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q24.1", "next_if_no": "Q25", "rationale_en": "Deferral depends on reason for use and route", "category": "hiv_prevention", "applies_to": "all", "rule_id": "R088"}, {"question_number": "Q24.1", "parent_rule_id": "R089", "node_type": "followup_question", "is_followup": true, "trigger_answer": "YES", "question_text_en": "What was the reason for use? (Same-sex contact or extramarital = permanent; Medical exposure = 6 months oral / 2 years injection)", "question_text_ar": "ما سبب الاستخدام؟ (مثلية أو خارج الزواج = دائم؛ تعرض طبي = Ù¦ أشهر فموي / سنتان حقن)", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "EVALUATE_REASON", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "High-risk behavior = permanent; Medical exposure = temporary", "category": "hiv_prevention", "applies_to": "all", "rule_id": "R089"}, {"question_number": "Q25", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had sexual contact outside of marriage?", "question_text_ar": "علاقة جنسية خارج الزواج؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: sexual_history", "category": "sexual_history", "applies_to": "all", "rule_id": "R090", "definition_note": "Sexual contact is defined as vaginal sex (contact between penis and vagina), oral sex (mouth or tongue on someone's vagina, penis, or anus), or anal sex (contact between penis and anus) regardless of whether or not medications, condoms or other protection were used."}, {"question_number": "Q26", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had sexual contact with same gender?", "question_text_ar": "علاقة جنسية مثلية؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: sexual_history", "category": "sexual_history", "applies_to": "all", "rule_id": "R091", "definition_note": "Sexual contact is defined as vaginal sex (contact between penis and vagina), oral sex (mouth or tongue on someone's vagina, penis, or anus), or anal sex (contact between penis and anus) regardless of whether or not medications, condoms or other protection were used."}, {"question_number": "Q27", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 12 months, sexual contact with unofficial marriage?", "question_text_ar": "علاقة بعقد زواج غير موثق خلال ١٢ شهر؟", "deferral_type": "temporary", "deferral_duration": 12, "deferral_unit": "months", "outcome_if_yes": "DEFER_12_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: sexual_history", "category": "sexual_history", "applies_to": "all", "rule_id": "R092", "definition_note": "Sexual contact is defined as vaginal sex (contact between penis and vagina), oral sex (mouth or tongue on someone's vagina, penis, or anus), or anal sex (contact between penis and anus) regardless of whether or not medications, condoms or other protection were used."}, {"question_number": "Q28", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, sexual contact with HIV+ person?", "question_text_ar": "علاقة مع مصاب بالإيدز خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R093", "definition_note": "Sexual contact is defined as vaginal sex (contact between penis and vagina), oral sex (mouth or tongue on someone's vagina, penis, or anus), or anal sex (contact between penis and anus) regardless of whether or not medications, condoms or other protection were used."}, {"question_number": "Q29", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER received payment for sex?", "question_text_ar": "تلقيت مقابلاً للجنس؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: sexual_history", "category": "sexual_history", "applies_to": "all", "rule_id": "R094", "definition_note": "Sexual contact is defined as vaginal sex (contact between penis and vagina), oral sex (mouth or tongue on someone's vagina, penis, or anus), or anal sex (contact between penis and anus) regardless of whether or not medications, condoms or other protection were used."}, {"question_number": "Q30", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had sex with someone who received payment for sex?", "question_text_ar": "علاقة مع من تلقى مقابلاً للجنس؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: sexual_history", "category": "sexual_history", "applies_to": "all", "rule_id": "R095", "definition_note": "Sexual contact is defined as vaginal sex (contact between penis and vagina), oral sex (mouth or tongue on someone's vagina, penis, or anus), or anal sex (contact between penis and anus) regardless of whether or not medications, condoms or other protection were used."}, {"question_number": "Q31", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER injected non-prescribed drugs/steroids?", "question_text_ar": "حقن أدوية غير موصوفة؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: drug_use", "category": "drug_use", "applies_to": "all", "rule_id": "R096"}, {"question_number": "Q32", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, sexual contact with injection drug user?", "question_text_ar": "علاقة مع مستخدم أدوية بالحقن خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R097", "definition_note": "Sexual contact is defined as vaginal sex (contact between penis and vagina), oral sex (mouth or tongue on someone's vagina, penis, or anus), or anal sex (contact between penis and anus) regardless of whether or not medications, condoms or other protection were used."}, {"question_number": "Q33", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, accidental needle-stick?", "question_text_ar": "وخز إبرة عرضي خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R098"}, {"question_number": "Q34", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, contact with someone else's blood?", "question_text_ar": "لامست دم شخص آخر خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R099"}, {"question_number": "Q35", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, tattoo or cosmetic procedure with needles?", "question_text_ar": "وشم أو إجراء تجميلي بالإبر خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R100"}, {"question_number": "Q36", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, ear or body piercing?", "question_text_ar": "ثقب أذÙ† أو جسم خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R101"}, {"question_number": "Q37", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, hijama (wet cupping)?", "question_text_ar": "حجامة خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R102"}, {"question_number": "Q38", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, blood transfusion?", "question_text_ar": "نقل دم خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R103"}, {"question_number": "Q39", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 6 months, bone or skin graft?", "question_text_ar": "رقعة عظمية أو جلدية خلال Ù¦ أشهر؟", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R104"}, {"question_number": "Q40", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 12 months, incarcerated 72+ hours?", "question_text_ar": "سجن Ù§Ù¢+ ساعة خلال ١٢ شهر؟", "deferral_type": "temporary", "deferral_duration": 12, "deferral_unit": "months", "outcome_if_yes": "DEFER_12_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R105"}, {"question_number": "Q41", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you been outside Saudi Arabia in the past 3 years?", "question_text_ar": "هل سافرت خارج المملكة خلال Ù£ سنوات؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "EVALUATE_OUTBREAKS", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q42", "next_if_no": "Q42", "rationale_en": "Evaluate for disease outbreaks: Ebola=8w, WNV=120d", "category": "travel", "applies_to": "all", "rule_id": "R106", "reference_urls": {"urls": [{"url": "https://www.pha.gov.sa/ar-sa/Pages/default.aspx", "source": "Saudi Public Health Authority"}, {"url": "https://shc.gov.sa/en/Pages/default.aspx", "source": "Saudi Health Council"}, {"url": "https://www.moh.gov.sa/Pages/default.aspx", "source": "Ministry of Health"}]}}, {"question_number": "Q42", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you visited or lived in a malaria-endemic area in the past 3 years?", "question_text_ar": "هل زرت أو عشت في منطقة موبوءة بالملاريا خلال Ù£ سنوات؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CONTINUE_MALARIA_ASSESSMENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q42.1", "next_if_no": "Q43", "rationale_en": "Complex decision tree for malaria exposure", "category": "malaria", "applies_to": "all", "rule_id": "R107", "reference_urls": {"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/preparing/yellow-fever-vaccine-malaria-prevention-by-country/", "source": "CDC Yellow Book"}}, {"question_number": "Q42.1", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "Length of stay in endemic country(ies)?", "question_text_ar": "مدة الإقامة في دولة موبوءة؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "BRANCH_BY_DURATION", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R108", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.2a", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "Stay ≤5 years: Was donor in any endemic AREA?", "question_text_ar": "إقامة ≤Ù¥ سنوات: هل كان في منطقة موبوءة؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "BRANCH_TO_Q42.3", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R109", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.2b", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "Stay >5 years: RESIDENT status - continue assessment", "question_text_ar": "إقامة >Ù¥ سنوات: حالة مقيم - متابعة التقييم", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "BRANCH_TO_Q42.4", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R110", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.3a", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "Stay in endemic area ≤24 hours: ELIGIBLE", "question_text_ar": "إقامة في منطقة موبوءة ≤٢٤ ساعة: مؤهل", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R111", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.3b", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "Stay in endemic area >24 hours: Check residency history", "question_text_ar": "إقامة في منطقة موبوءة >٢٤ ساعة: تحقق من تاريخ الإقامة", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "BRANCH_TO_Q42.4", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R112", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.4", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "Was donor EVER resident (>5y) of endemic country before this travel?", "question_text_ar": "هل كان المتبرع مقيماً (>Ù¥ سنوات) قبل هذا السفر؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "BRANCH_BY_RESIDENCY", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R113", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.5", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "After residency, did donor have 3-year malaria-free period in non-endemic country?", "question_text_ar": "بعد الإقامة، هل مرت Ù£ سنوات في بلد غير موبوء؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "BRANCH_BY_3Y_CLEAR", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R114", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.6", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "Has donor traveled (>24h) to endemic area after leaving endemic country of residence?", "question_text_ar": "هل سافر المتبرع (>٢٤س) لمنطقة موبوءة بعد المغادرة؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "FINAL_OUTCOME", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R115", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.7", "parent_rule_id": "R107", "node_type": "followup_question", "is_followup": true, "trigger_answer": "MALARIA_ASSESSMENT", "question_text_en": "Will collection be pathogen-reduced platelets/plasma?", "question_text_ar": "هل سيكون التجميع صفائح/بلازما معالجة؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE_IF_PATHOGEN_REDUCED", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Malaria decision tree node", "category": "malaria", "applies_to": "all", "rule_id": "R116", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.OUT1", "parent_rule_id": "R107", "node_type": "followup_outcome", "is_followup": true, "trigger_answer": "NON_RESIDENT_TRAVELER", "question_text_en": "Non-resident traveler to endemic area: Defer 3 months from departure", "question_text_ar": "مسافر غير مقيم لمنطقة موبوءة: تأجيل Ù£ أشهر", "deferral_type": "temporary", "deferral_duration": 3, "deferral_unit": "months", "outcome_if_yes": "DEFER_3_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "3 months from departure from endemic area", "category": "malaria", "applies_to": "all", "rule_id": "R117", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.OUT2", "parent_rule_id": "R107", "node_type": "followup_outcome", "is_followup": true, "trigger_answer": "RESIDENT_WITH_RECENT_TRAVEL", "question_text_en": "Resident with recent travel to endemic area: Defer 3 years from most recent departure", "question_text_ar": "مقيم سافر حديثاً: تأجيل Ù£ سنوات", "deferral_type": "temporary", "deferral_duration": 3, "deferral_unit": "years", "outcome_if_yes": "DEFER_3_YEARS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "3 years from most recent departure from endemic AREA", "category": "malaria", "applies_to": "all", "rule_id": "R118", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q42.OUT3", "parent_rule_id": "R107", "node_type": "followup_outcome", "is_followup": true, "trigger_answer": "RESIDENT_NO_RECENT_TRAVEL", "question_text_en": "Resident without recent travel: Defer 3 years from departure from country of residence", "question_text_ar": "مقيم بدون سفر حديث: تأجيل Ù£ سنوات من مغادرة بلد الإقامة", "deferral_type": "temporary", "deferral_duration": 3, "deferral_unit": "years", "outcome_if_yes": "DEFER_3_YEARS_FROM_COUNTRY", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "3 years from departure from endemic COUNTRY of residence", "category": "malaria", "applies_to": "all", "rule_id": "R119", "reference_urls": {"urls": [{"url": "https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria", "source": "CDC Yellow Book - Malaria"}, {"url": "https://www.who.int/news-room/fact-sheets/detail/malaria", "source": "WHO - Malaria Fact Sheet"}]}}, {"question_number": "Q43", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had malaria?", "question_text_ar": "هل أصبت بالملاريا؟", "deferral_type": "temporary", "deferral_duration": 3, "deferral_unit": "years", "outcome_if_yes": "DEFER_3_YEARS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: infectious_disease", "category": "infectious_disease", "applies_to": "all", "rule_id": "R120"}, {"question_number": "Q44", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had brucellosis (Malta fever)?", "question_text_ar": "هل شُخصت بالبروسيلا؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: infectious_disease", "category": "infectious_disease", "applies_to": "all", "rule_id": "R121"}, {"question_number": "Q45", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 2 months, consumed raw/unpasteurized milk/dairy?", "question_text_ar": "حليب غير مبستر خلال شهرين؟", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "months", "outcome_if_yes": "DEFER_2_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: exposure", "category": "exposure", "applies_to": "all", "rule_id": "R122"}, {"question_number": "Q46", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "In past 4 months, had dengue virus infection?", "question_text_ar": "حمى الضنك خلال Ù¤ أشهر؟", "deferral_type": "temporary", "deferral_duration": 4, "deferral_unit": "months", "outcome_if_yes": "DEFER_4_MONTHS", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: infectious_disease", "category": "infectious_disease", "applies_to": "all", "rule_id": "R123"}, {"question_number": "Q47", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had positive test for Babesia?", "question_text_ar": "تحليل البابسيات إيجابي؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: infectious_disease", "category": "infectious_disease", "applies_to": "all", "rule_id": "R124"}, {"question_number": "Q48", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had Chagas disease?", "question_text_ar": "داء شاغاس؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": null, "rationale_en": "Category: infectious_disease", "category": "infectious_disease", "applies_to": "all", "rule_id": "R125"}, {"question_number": "Q49", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER been to Mexico, Central America, or South America?", "question_text_ar": "هل زرت المكسيك أو أمريكا الوسطى أو الجنوبية؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CHECK_CHAGAS_RISK", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q49.1", "next_if_no": "Q50", "rationale_en": "T. cruzi (Chagas) risk assessment", "category": "travel", "applies_to": "all", "rule_id": "R126"}, {"question_number": "Q49.1", "parent_rule_id": "R127", "node_type": "followup_question", "is_followup": true, "trigger_answer": "YES", "question_text_en": "Have you lived there for 6 continuous months or more?", "question_text_ar": "هل عشت هناك Ù¦ أشهر متواصلة أو أكثر؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_INDEFINITE", "outcome_if_no": "CHECK_TRANSFUSION", "next_if_yes": null, "next_if_no": "Q49.2", "rationale_en": "≥6 months = indefinite deferral for Chagas", "category": "travel", "applies_to": "all", "rule_id": "R127"}, {"question_number": "Q49.2", "parent_rule_id": "R127", "node_type": "followup_question", "is_followup": true, "trigger_answer": "NO_6_MONTHS", "question_text_en": "Have you received a blood transfusion there?", "question_text_ar": "هل تلقيت نقل دم هناك؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_INDEFINITE", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q50", "rationale_en": "Transfusion in endemic area = indefinite deferral", "category": "travel", "applies_to": "all", "rule_id": "R128"}, {"question_number": "Q50", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Were you or your mother born in Mexico, Central America, or South America?", "question_text_ar": "هل ولدت أنت أو والدتك في المكسيك أو أمريكا الوسطى/الجنوبية؟", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_INDEFINITE", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q51", "rationale_en": "Vertical transmission risk for T. cruzi", "category": "travel", "applies_to": "all", "rule_id": "R129"}, {"question_number": "Q51", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you EVER had brain surgery?", "question_text_ar": "هل أجريت عملية في المخ؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "CHECK_DURA_MATER", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q51.1", "next_if_no": "Q52", "rationale_en": "Cadaveric dura mater = permanent (CJD); others = no deferral", "category": "medical_history", "applies_to": "all", "rule_id": "R130"}, {"question_number": "Q52", "parent_rule_id": null, "node_type": "main_question", "is_followup": false, "trigger_answer": null, "question_text_en": "Have you had transplantation of organ, tissue, or cells (bone marrow, stem cells)?", "question_text_ar": "هل تلقيت زراعة عضو أو نسيج أو خلايا؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "EVALUATE_TRANSPLANT_TYPE", "outcome_if_no": "ELIGIBLE", "next_if_yes": "Q52.1", "next_if_no": null, "rationale_en": "Allogeneic=6m; Autologous=0; Xeno=permanent", "category": "medical_history", "applies_to": "all", "rule_id": "R131"}, {"question_number": "Q52.1a", "parent_rule_id": "R133", "node_type": "followup_outcome", "is_followup": true, "trigger_answer": "ALLOGENEIC", "question_text_en": "Allogeneic (from another person): Defer 6 months", "question_text_ar": "من شخص آخر: تأجيل Ù¦ أشهر", "deferral_type": "temporary", "deferral_duration": 6, "deferral_unit": "months", "outcome_if_yes": "DEFER_6_MONTHS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Risk of infectious disease from donor", "category": "medical_history", "applies_to": "all", "rule_id": "R132"}, {"question_number": "Q52.1b", "parent_rule_id": "R133", "node_type": "followup_outcome", "is_followup": true, "trigger_answer": "AUTOLOGOUS", "question_text_en": "Autologous (own tissue): No deferral", "question_text_ar": "ذاتي: بدون تأجيل", "deferral_type": "none", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "ELIGIBLE", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Own tissue = no risk", "category": "medical_history", "applies_to": "all", "rule_id": "R133"}, {"question_number": "Q52.1c", "parent_rule_id": "R133", "node_type": "followup_outcome", "is_followup": true, "trigger_answer": "XENOTRANSPLANT", "question_text_en": "Xenotransplantation (animal): Permanent deferral", "question_text_ar": "من حيوان: تأجيل دائم", "deferral_type": "permanent", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Unknown infectious risks from animal sources", "category": "medical_history", "applies_to": "all", "rule_id": "R134"}, {"question_number": "Q13.M33", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Dalteparin (Fragmin)", "question_text_ar": "فراغمين (دالتيبارين)", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Anticoagulant - affects blood's ability to clot", "category": "medications", "applies_to": "all", "rule_id": "R135", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q13.M34", "parent_rule_id": "R032", "node_type": "medication_deferral", "is_followup": true, "trigger_answer": "MEDICATION", "question_text_en": "Edoxaban (Savaysa, Lixiana)", "question_text_ar": "سافايسا / ليكسيانا (إيدوكسابان)", "deferral_type": "temporary", "deferral_duration": 2, "deferral_unit": "days", "outcome_if_yes": "DEFER_2_DAYS", "outcome_if_no": null, "next_if_yes": null, "next_if_no": null, "rationale_en": "Anticoagulant - affects blood's ability to clot", "category": "medications", "applies_to": "all", "rule_id": "R136", "reference_urls": {"urls": [{"url": "https://www.redcrossblood.org/donate-blood/how-to-donate/eligibility-requirements/eligibility-criteria-alphabetical/eligibility-reference-material.html", "source": "American Red Cross - Medication Deferral List"}, {"url": "https://www.blood.co.uk/who-can-give-blood/", "source": "NHS Blood - Eligibility Guidelines"}]}}, {"question_number": "Q5.1", "parent_rule_id": "R018", "node_type": "followup_question", "is_followup": true, "trigger_answer": "YES", "question_text_en": "Were oral or intravenous antibiotics used for treatment?", "question_text_ar": "هل استخدمت مضادات حيوية فموية أو وريدية للعلاج؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_4_WEEKS", "outcome_if_no": "DEFER_2_WEEKS", "next_if_yes": null, "next_if_no": "Q6", "rationale_en": "If antibiotics used: 4 weeks after completion of treatment. Without antibiotics: 2 weeks after healing.", "category": "general_health", "applies_to": "all", "rule_id": "R137"}, {"question_number": "Q6.2", "parent_rule_id": "R019", "node_type": "followup_question", "is_followup": true, "trigger_answer": "NO_HEMATOLOGICAL", "question_text_en": "Are you cancer-free with last treatment ≥12 months ago?", "question_text_ar": "هل أنت خالٍ من السرطان وآخر علاج قبل ١٢ شهر أو أكثر؟", "deferral_type": "temporary", "deferral_duration": 12, "deferral_unit": "months", "outcome_if_yes": "ELIGIBLE_PER_PHYSICIAN", "outcome_if_no": "DEFER_UNTIL_12_MONTHS_POST_TREATMENT", "next_if_yes": "Q7", "next_if_no": null, "rationale_en": "Non-hematological cancer: May donate if cancer-free and last treatment ≥12 months ago. Per blood bank physician judgment.", "category": "medical_history", "applies_to": "all", "rule_id": "R138"}, {"question_number": "Q51.1", "parent_rule_id": "R130", "node_type": "followup_question", "is_followup": true, "trigger_answer": "YES", "question_text_en": "Did you receive a human cadaveric dura mater transplant or graft?", "question_text_ar": "هل تلقيت زرع أم السحايا من متوفى؟", "deferral_type": "variable", "deferral_duration": null, "deferral_unit": null, "outcome_if_yes": "DEFER_PERMANENT", "outcome_if_no": "ELIGIBLE", "next_if_yes": null, "next_if_no": "Q52", "rationale_en": "Cadaveric dura mater transplant = permanent deferral due to Creutzfeldt-Jakob Disease (CJD) risk. Other brain surgeries have no deferral.", "category": "medical_history", "applies_to": "all", "rule_id": "R139"}]};
+
+// Eligibility requirements (shown as info before questionnaire)
+const ELIGIBILITY_REQUIREMENTS = [
+  { en: 'Age ≥18 years (17-18 with parental consent)', ar: 'ألا يقل العمر عن ١٨ عاماً (يمكن التبرع بين Ù¡Ù§ و١٨ عاماً بإذن خطي من ولي الأمر)' },
+  { en: 'Valid Saudi ID or Iqama', ar: 'الهوية الوطنية السعودية أو الإقامة سارية المفعول' },
+  { en: 'Ability to understand Arabic or English', ar: 'القدرة على فهم الاستبانة باللغة العربية أو الإنجليزية' },
+  { en: 'Good general health', ar: 'صحة جيدة بشكلٍ عام' },
+  { en: 'Hemoglobin ≥13 g/dL, Hematocrit ≥39% (males)', ar: 'الهيموجلوبين ≥١٣ جم/ديسيليتر والهيماتوكريت ≥٣٩٪ (للرجال)' },
+  { en: 'Hemoglobin ≥12.5 g/dL, Hematocrit ≥38% (females)', ar: 'الهيموجلوبين ≥١٢.Ù¥ جم/ديسيليتر والهيماتوكريت ≥٣٨٪ (للنساء)' },
+  { en: 'Temperature ≤37.5°C (oral)', ar: 'درجة الحرارة لا تزيد عن Ù£Ù§.Ù¥ درجة مئوية' },
+  { en: 'Blood pressure: Systolic 90-180, Diastolic 50-100 mmHg', ar: 'ضغط الدم الانقباضي ٩٠-١٨٠ والانبساطي ٥٠-١٠٠ مم زئبق' },
+  { en: 'Pulse 50-100 bpm, regular', ar: 'النبض ٥٠-١٠٠ نبضة/دقيقة، منتظم' },
+  { en: 'Weight ≥50 kg', ar: 'الوزن ≥٥٠ كيلوجرام' },
+];
+
+// Reference links
+const REFERENCE_LINKS = {
+  pha: { url: 'https://pha.gov.sa', name: 'Saudi Public Health Authority', nameAr: 'هيئة الصحة العامة السعودية' },
+  moh: { url: 'https://moh.gov.sa', name: 'Ministry of Health', nameAr: 'وزارة الصحة' },
+  shc: { url: 'https://shc.gov.sa', name: 'Saudi Health Council', nameAr: 'المجلس الصحي السعودي' },
+  cdc_malaria: { url: 'https://wwwnc.cdc.gov/travel/yellowbook/2024/infections-diseases/malaria', name: 'CDC - Malaria Endemic Areas', nameAr: 'مراكز السيطرة على الأمراض - مناطق الملاريا' },
+};
+
+// EXACT questions from the Saudi National Blood Bank DHQ - matching questionnaire document exactly
+const QUESTIONS = [
+  // General Health Questions
+  { id: 'Q1', en: 'Are you feeling healthy and well to donate blood today?', ar: 'هل تشعر أنك بصحة جيدة للتبرع بالدم اليوم؟', category: 'general_health' },
+  { id: 'Q2', en: 'Have you read the blood donor educational materials today? and were all your questions answered to your satisfaction?', ar: 'هل اطلعت على المواد التثقيفية المخصصة للمتبرعين بالدم اليوم وأجيب عن استفساراتك بشكلٍ مرضٍ؟', category: 'general_health' },
+  { id: 'Q3', en: 'Have you ever been refused as a blood donor, or told not to donate blood?', ar: 'هل سبق منعك من التبرع بالدم مسبقا؟', category: 'general_health' },
+  { id: 'Q4', en: 'Have you been to the dentist for a procedure during the past 7 days?', ar: 'هل زرت طبيب الأسنان لأي عارض خلال آخر ٧ أيام؟', category: 'dental', followup: 'dental' },
+  { id: 'Q5', en: 'Have you had a wound or a skin infection in the past 2 weeks?', ar: 'هل أصبت بجرح أو التهاب في الجلد خلال الأسبوعين الأخيرين؟', category: 'general_health', followup: 'wound' },
+  { id: 'Q6', en: 'Have you ever had any type of cancer, including leukemia?', ar: 'هل جرى تشخيصك بأي نوع من السرطان؟ بما في ذلك سرطان الدم (اللوكيميا)؟', category: 'medical_conditions' },
+  { id: 'Q7', en: 'Have you ever had any problems with your heart or lungs?', ar: 'هل شُخصت بأي مشكلة في القلب أو الرئتين؟', category: 'medical_conditions' },
+  { id: 'Q8', en: 'Have you ever had a bleeding condition or blood disease?', ar: 'هل شُخصت بسيولة في الدم أو مرض في الدم؟', category: 'medical_conditions' },
+  { id: 'Q9', en: 'Do you have diabetes?', ar: 'هل أنت مصاب بالسكر؟', category: 'medical_conditions', followup: 'diabetes' },
+  { id: 'Q10', en: 'For women only: are you pregnant now?', ar: 'للسيدات فقط: هل أنتِ حامل الآن؟', category: 'female_specific', gender: 'female' },
+  { id: 'Q11', en: 'For women only: have you ever been pregnant (even if it did not continue)?', ar: 'للسيدات فقط: هل سبق لك الحمل (حتى ولو لم يكتمل)؟', category: 'female_specific', gender: 'female', followup: 'pregnancy' },
+  
+  // Medications and Vaccinations
+  { id: 'Q12', en: 'Are you currently taking any medications?', ar: 'هل تستخدم أي أدوية حاليا؟', category: 'medications' },
+  { id: 'Q13', en: 'Have you taken any medications on the Medication Deferral List in the time frames indicated? (Review the attached Medication Deferral List)', ar: 'هل تستخدم حاليا أو سبق أن استخدمت أياً من الأدوية المذكورة في القائمة المرفقة خلال الفترة الزمنية المحددة أمام كل دواء؟', category: 'medications', followup: 'medication', reference: 'medication' },
+  { id: 'Q14', en: 'In the past 8 weeks, have you had any vaccinations or other shots?', ar: 'هل تلقيت أي لقاحات (تطعيمات) خلال آخر ٨ أسابيع؟', category: 'vaccinations', followup: 'vaccine' },
+  { id: 'Q15', en: 'In the past 8 weeks, have you had contact with someone who was vaccinated for smallpox in the past 8 weeks?', ar: 'في آخر ٨ أسابيع هل خالطت شخصا تلقى لقاح الجدري خلال آخر ٨ أسابيع؟', category: 'vaccinations', followup: 'smallpox' },
+  
+  // Blood and Components Donation
+  { id: 'Q16', en: 'In the past 8 weeks, have you donated blood, platelets, or plasma?', ar: 'هل تبرعت بالدم أو بالصفائح أو البلازما خلال آخر ٨ أسابيع؟', category: 'donation_history' },
+  { id: 'Q17', en: 'In the past 16 weeks, have you donated a double unit of red blood cells using an apheresis machine?', ar: 'هل تبرعت بوحدتين من كريات الدم الحمراء عن طريق جهاز فصل الخلايا خلال آخر ١٦ أسبوع؟', category: 'donation_history' },
+  
+  // Exposure to blood and sexual contact
+  { id: 'Q18', en: 'Have you ever had a positive test for hepatitis B or C viruses?', ar: 'هل سبق أن أجري لك تحليل للفيروسات الكبدية ب أو ج وكانت النتيجة إيجابية (غير سليمة)؟', category: 'infections' },
+  { id: 'Q19', en: 'In the past 6 months, have you had sexual contact with a person who has hepatitis?', ar: 'هل كان لك علاقة جنسية مع شخص مصاب بالتهاب الكبد خلال آخر ٦ أشهر؟', category: 'exposure' },
+  { id: 'Q20', en: 'In the past 6 months, have you lived with a person who has hepatitis?', ar: 'هل عشت في نفس المنزل مع شخص مصاب بالتهاب الكبد خلال آخر ٦ أشهر؟', category: 'exposure' },
+  { id: 'Q21', en: 'In the past 3 months, have you had syphilis or gonorrhea or been treated for syphilis or gonorrhea?', ar: 'هل شُخصت بمرض الزهري أو السيلان أو جرى علاجك منهما خلال آخر ٣ أشهر؟', category: 'infections' },
+  { id: 'Q22', en: 'Have you ever had a positive test result for HIV infection?', ar: 'هل سبق أن أجري لك تحليل لفيروس نقص المناعة المكتسب (الإيدز) وكانت النتيجة إيجابية (غير سليمة)؟', category: 'infections' },
+  { id: 'Q23', en: 'Have you ever taken any medication to treat HIV infection?', ar: 'هل سبق واستخدمت علاجا لمرض نقص المناعة المكتسب (الإيدز)؟', category: 'medications' },
+  { id: 'Q24', en: 'Have you ever received any medication orally or by injection to prevent HIV infection? (i.e. PrEP or PEP)', ar: 'هل سبق واستخدمت دواء وقائيا لمنع الإصابة بفيروس نقص المناعة المكتسب (الإيدز) سواء بالفم أو الإبر؟', category: 'medications' },
+  { id: 'Q25', en: 'Have you ever had any sexual contact with a person outside of marriage?', ar: 'هل سبق أن كانت لك علاقة جنسية مع أي شخص خارج إطار الزواج؟', category: 'sexual_history' },
+  { id: 'Q26', en: 'Have you ever had sexual contact with a person of the same gender?', ar: 'هل سبق أن كانت لك علاقة جنسية مثلية (مع شخص من نفس الجنس) في أي وقت؟', category: 'sexual_history' },
+  { id: 'Q27', en: 'In the past 12 months, have you had any sexual contact with a person with whom you have a marriage contract not documented in Saudi Arabia or another country?', ar: 'هل سبق أن كانت لك علاقة جنسية مع أي شخص بعقد زواج غير موثق بالمملكة أو خارجها خلال آخر ١٢ شهراً؟', category: 'sexual_history' },
+  { id: 'Q28', en: 'In the past 6 months, have you had sexual contact with anyone who has ever had a positive test result for HIV infection?', ar: 'هل كانت لك علاقة جنسية خلال آخر ٦ أشهر مع شخص مصاب بفيروس نقص المناعة المكتسب/الإيدز أو كانت نتيجة اختبار هذا الفيروس لديه إيجابية (غير سليمة)؟', category: 'sexual_history' },
+  { id: 'Q29', en: 'Have you ever received money, drugs, or other payment for sex?', ar: 'هل سبق أن تلقيت مقابلا ماديا لعلاقة جنسية؟', category: 'sexual_history' },
+  { id: 'Q30', en: 'Have you ever had sexual contact with anyone who has ever received money, drugs, or other payment for sex?', ar: 'هل سبق أن كانت لك علاقة جنسية مع أي شخص تلقى مقابلا ماديا للجنس؟', category: 'sexual_history' },
+  { id: 'Q31', en: 'Have you ever used needles to inject drugs, steroids, or other substances not prescribed by your doctor?', ar: 'هل سبق لك استخدام الإبر لأخذ أي أدوية لم يصفها لك الطبيب (بما فيها الهرمونات أو الأدوية المخدرة)؟', category: 'drug_use' },
+  { id: 'Q32', en: 'In the past 6 months, have you had sexual contact with anyone who has used needles in the past 6 months to inject drugs, steroids, or anything not prescribed by their doctor?', ar: 'خلال آخر ٦ أشهر، هل كان لك علاقة جنسية مع شخص قام باستخدام الإبر خلال آخر ٦ أشهر لأخذ أي أدوية لم يصفها له الطبيب (بما فيها الهرمونات أو الأدوية المخدرة)؟', category: 'sexual_history' },
+  { id: 'Q33', en: 'In the past 6 months, have you had an accidental needle-stick?', ar: 'هل تعرضت لحادث وخز بإبرة خلال آخر ٦ أشهر؟', category: 'exposure' },
+  { id: 'Q34', en: 'In the past 6 months, have you come into contact with someone else\'s blood?', ar: 'هل لامست دم شخصٍ آخر خلال آخر ٦ أشهر؟', category: 'exposure', followup: 'blood_contact' },
+  { id: 'Q35', en: 'In the past 6 months, have you had a tattoo or any cosmetic procedure involving needles?', ar: 'هل أُجريت لك عملية وشم أو أي إجراء تجميلي باستخدام الإبر خلال آخر ٦ أشهر؟', category: 'exposure' },
+  { id: 'Q36', en: 'In the past 6 months, have you had an ear or a body piercing?', ar: 'هل أُجريت لك عملية ثقب في الأذن أو أي مكان في الجسم خلال آخر ٦ أشهر؟', category: 'exposure' },
+  { id: 'Q37', en: 'In the past 6 months, have you had hijama (wet cupping)?', ar: 'هل أُجريت لك حجامة خلال آخر ٦ أشهر؟', category: 'exposure' },
+  { id: 'Q38', en: 'In the past 6 months, have you had a blood transfusion?', ar: 'هل تم نقل دم لك خلال آخر ٦ أشهر؟', category: 'exposure' },
+  { id: 'Q39', en: 'In the past 6 months, have you had a graft such as bone or skin?', ar: 'هل تلقيت رقعة جلدية أو عظمية خلال آخر ٦ أشهر؟', category: 'medical_procedures' },
+  { id: 'Q40', en: 'In the past 12 months, have you been in juvenile detention, lockup, jail, or prison for 72 hours or more consecutively?', ar: 'هل جرى إيقافك في سجن الأحداث أو التوقيف أو السجن العادي لمدة ٧٢ ساعة أو أكثر خلال آخر ١٢ شهرا؟', category: 'exposure' },
+  
+  // Additional Questions (Various diseases and health issues)
+  { id: 'Q41', en: 'Have you been outside Saudi Arabia in the past 3 years?', ar: 'هل سافرت أو عشت خارج المملكة خلال آخر ٣ سنوات؟', category: 'travel', followup: 'travel', reference: 'travel' },
+  { id: 'Q42', en: 'Have you visited or lived in a malaria endemic area (within or outside Saudi Arabia) in the past 3 years?', ar: 'هل سافرت أو عشت في منطقة موبوءة بالملاريا داخل المملكة أو خارجها خلال آخر ٣ سنوات؟', category: 'travel', followup: 'malaria', reference: 'malaria' },
+  { id: 'Q43', en: 'Have you ever had malaria?', ar: 'هل سبق أن أصبت بالملاريا؟', category: 'infections' },
+  { id: 'Q44', en: 'Have you ever had brucellosis (Malta fever)?', ar: 'هل سبق أن شُخصت بالبروسيلا (الحمى المالطية)؟', category: 'infections' },
+  { id: 'Q45', en: 'Have you consumed raw or unpasteurized milk or dairy products in the past 2 months?', ar: 'هل تناولت حليبا أو مشتقات حليب طازجة غير معقمة/غير مبسترة خلال الشهرين الماضيين؟', category: 'exposure' },
+  { id: 'Q46', en: 'Have you had dengue virus infection in the past 4 months?', ar: 'هل شُخصت بحمى الضنك خلال آخر ٤ أشهر؟', category: 'infections' },
+  { id: 'Q47', en: 'Have you ever had a positive test result for Babesia?', ar: 'هل سبق أن شُخصت بداء البابسيات Babesiosis؟', category: 'infections' },
+  { id: 'Q48', en: 'Have you ever had Chagas disease?', ar: 'هل سبق أن شُخصت بداء شاغاس (داء المثقبيّات الأمريكي)؟', category: 'infections' },
+  { id: 'Q49', en: 'Have you ever been to Mexico, countries of Central America or South America?', ar: 'هل زرت أو عشت في المكسيك أو دول أمريكا الوسطى أو أمريكا الجنوبية؟', category: 'travel' },
+  { id: 'Q50', en: 'Were you or your mother born in Mexico, countries of Central America or South America?', ar: 'هل ولدت أنت أو والدتك في المكسيك أو دول أمريكا الوسطى أو أمريكا الجنوبية؟', category: 'travel' },
+  { id: 'Q51', en: 'Have you ever had brain surgery?', ar: 'هل أجريت لك عملية في المخ؟', category: 'medical_procedures' },
+  { id: 'Q52', en: 'Have you had a transplantation of an organ or tissue or cells (such as bone marrow or stem cells)?', ar: 'هل تلقيت زراعة أي عضو أو نسيج أو خلايا (مثل: نخاع العظم أو الخلايا الجذعية)؟', category: 'medical_procedures' },
+];
+
+// External Link Component that opens in new tab
+function ExtLink({ href, children, className = "" }) {
+  const handleClick = (e) => {
+    e.preventDefault();
+    window.open(href, '_blank', 'noopener,noreferrer');
+  };
+  
+  return (
+    <a 
+      href={href} 
+      onClick={handleClick}
+      className={`inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline cursor-pointer ${className}`}
+    >
+      {children}
+      <ExternalLink className="w-3 h-3" />
+    </a>
+  );
+}
+
+// Medication List Component - Expandable dropdown
+function MedicationList({ language }) {
+  const [expanded, setExpanded] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState(null);
+
+  const medications = [
+    {
+      category: { en: 'Platelet Inhibitors', ar: 'مثبطات الصفائح الدموية' },
+      items: [
+        { name: 'Aspirin', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Piroxicam (Feldene)', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Prasugrel (Effient)', deferral: { en: '3 days', ar: '٣ أيام' } },
+        { name: 'Ticagrelor (Brilinta)', deferral: { en: '7 days', ar: '٧ أيام' } },
+        { name: 'Clopidogrel (Plavix)', deferral: { en: '14 days', ar: '١٤ يوم' } },
+        { name: 'Ticlopidine (Ticlid)', deferral: { en: '14 days', ar: '١٤ يوم' } },
+        { name: 'Vorapaxar (Zontivity)', deferral: { en: '1 month', ar: 'شهر' } },
+      ]
+    },
+    {
+      category: { en: 'Anticoagulants', ar: 'مضادات التخثر' },
+      items: [
+        { name: 'Fondaparinux (Arixtra)', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Apixaban (Eliquis)', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Rivaroxaban (Xarelto)', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Dabigatran (Pradaxa)', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Edoxaban (Savaysa)', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Enoxaparin (Lovenox)', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Dalteparin (Fragmin)', deferral: { en: '2 days', ar: '٢ يوم' } },
+        { name: 'Warfarin (Coumadin)', deferral: { en: '7 days', ar: '٧ أيام' } },
+        { name: 'Heparin / LMWH', deferral: { en: '7 days', ar: '٧ أيام' } },
+      ]
+    },
+    {
+      category: { en: 'Teratogenic Medications', ar: 'الأدوية المسببة للتشوهات' },
+      items: [
+        { name: 'Isotretinoin (Accutane/Roaccutane)', deferral: { en: '1 month', ar: 'شهر' } },
+        { name: 'Finasteride (Propecia/Proscar)', deferral: { en: '1 month', ar: 'شهر' } },
+        { name: 'Dutasteride (Avodart)', deferral: { en: '6 months', ar: '٦ أشهر' } },
+        { name: 'Acitretin (Soriatane)', deferral: { en: '3 years', ar: '٣ سنوات' } },
+        { name: 'Etretinate (Tegison)', deferral: { en: 'Permanent', ar: 'دائم' } },
+      ]
+    },
+    {
+      category: { en: 'Immunosuppressants', ar: 'مثبطات المناعة' },
+      items: [
+        { name: 'Thalidomide / Lenalidomide', deferral: { en: '1 month', ar: 'شهر' } },
+        { name: 'Teriflunomide (Aubagio)', deferral: { en: '24 months', ar: '٢٤ شهر' } },
+        { name: 'Leflunomide (Arava)', deferral: { en: '24 months', ar: '٢٤ شهر' } },
+        { name: 'Mycophenolate (Cellcept)', deferral: { en: '6 weeks', ar: '٦ أسابيع' } },
+        { name: 'Upadacitinib (Rinvoq)', deferral: { en: '1 month', ar: 'شهر' } },
+      ]
+    },
+    {
+      category: { en: 'Cancer Medications', ar: 'أدوية السرطان' },
+      items: [
+        { name: 'Vismodegib (Erivedge)', deferral: { en: '24 months', ar: '٢٤ شهر' } },
+        { name: 'Sonidegib (Odomzo)', deferral: { en: '24 months', ar: '٢٤ شهر' } },
+      ]
+    },
+    {
+      category: { en: 'HIV Prevention & Treatment', ar: 'الوقاية من فيروس نقص المناعة وعلاجه' },
+      items: [
+        { name: 'Oral PrEP/PEP (Truvada, Descovy)', deferral: { en: '6 months', ar: '٦ أشهر' } },
+        { name: 'Injectable PrEP (Cabotegravir/Apretude)', deferral: { en: '24 months', ar: '٢٤ شهر' } },
+        { name: 'ART (HIV Treatment)', deferral: { en: 'Permanent', ar: 'دائم' } },
+      ]
+    },
+    {
+      category: { en: 'Other Medications', ar: 'أدوية أخرى' },
+      items: [
+        { name: 'Antibiotics / Antivirals / Antifungals', deferral: { en: '1 month after completion', ar: 'شهر بعد الانتهاء' } },
+        { name: 'HBIG (Hepatitis B Immune Globulin)', deferral: { en: '6 months', ar: '٦ أشهر' } },
+        { name: 'Experimental Medications/Vaccines', deferral: { en: '12 months', ar: '١٢ شهر' } },
+      ]
+    },
+  ];
+
+  return (
+    <div className="border border-amber-200 rounded-xl overflow-hidden bg-amber-50">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full px-4 py-3 flex items-center justify-between bg-amber-100 hover:bg-amber-200 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <FileText className="w-5 h-5 text-amber-700" />
+          <span className="font-medium text-amber-800">
+            {language === 'en' ? 'View Medication Deferral List' : 'عرض قائمة الأدوية المؤجلة'}
+          </span>
+        </div>
+        <ChevronRight className={`w-5 h-5 text-amber-600 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+      </button>
+      
+      {expanded && (
+        <div className="p-3 max-h-80 overflow-y-auto">
+          <p className="text-xs text-amber-700 mb-3 px-1">
+            {language === 'en' 
+              ? 'Click on a category to see medications and their deferral periods:' 
+              : 'انقر على فئة لرؤية الأدوية وفترات التأجيل:'}
+          </p>
+          <div className="space-y-2">
+            {medications.map((cat, idx) => (
+              <div key={idx} className="border border-amber-200 rounded-lg overflow-hidden bg-white">
+                <button
+                  onClick={() => setExpandedCategory(expandedCategory === idx ? null : idx)}
+                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-amber-50 transition-colors"
+                >
+                  <span className="font-medium text-sm text-gray-700">
+                    {language === 'en' ? cat.category.en : cat.category.ar}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{cat.items.length}</span>
+                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === idx ? 'rotate-90' : ''}`} />
+                  </div>
+                </button>
+                {expandedCategory === idx && (
+                  <div className="border-t border-amber-100 bg-gray-50">
+                    {cat.items.map((med, midx) => (
+                      <div key={midx} className="px-3 py-2 flex justify-between items-center text-sm border-b border-gray-100 last:border-b-0">
+                        <span className="text-gray-700">{med.name}</span>
+                        <span className="text-red-600 font-medium text-xs bg-red-50 px-2 py-0.5 rounded">
+                          {language === 'en' ? med.deferral.en : med.deferral.ar}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Vaccine List Component - Expandable dropdown
+function VaccineList({ language }) {
+  const [expanded, setExpanded] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState(null);
+
+  const vaccines = [
+    {
+      category: { en: 'No Deferral Required', ar: 'لا يتطلب تأجيل' },
+      items: [
+        { name: 'COVID-19 (mRNA/non-replicating: Pfizer, Moderna, J&J)', deferral: { en: 'No deferral', ar: 'لا يوجد' } },
+        { name: 'Jynneos (Smallpox/Mpox - non-replicating)', deferral: { en: 'No deferral', ar: 'لا يوجد' } },
+        { name: 'Toxoids/Killed vaccines (if symptom-free)', deferral: { en: 'No deferral', ar: 'لا يوجد' } },
+        { name: 'Recombinant vaccines (HPV, Shingrix)', deferral: { en: 'No deferral', ar: 'لا يوجد' } },
+        { name: 'Intranasal flu (live attenuated)', deferral: { en: 'No deferral', ar: 'لا يوجد' } },
+        { name: 'Vaxchora (oral cholera)', deferral: { en: 'No deferral', ar: 'لا يوجد' } },
+      ]
+    },
+    {
+      category: { en: '2-Week Deferral', ar: 'تأجيل أسبوعين' },
+      items: [
+        { name: 'Measles', deferral: { en: '2 weeks', ar: 'أسبوعين' } },
+        { name: 'Mumps', deferral: { en: '2 weeks', ar: 'أسبوعين' } },
+        { name: 'Polio (oral)', deferral: { en: '2 weeks', ar: 'أسبوعين' } },
+        { name: 'Typhoid (oral)', deferral: { en: '2 weeks', ar: 'أسبوعين' } },
+        { name: 'Yellow fever', deferral: { en: '2 weeks', ar: 'أسبوعين' } },
+        { name: 'COVID-19 (live attenuated)', deferral: { en: '14 days', ar: '١٤ يوم' } },
+        { name: 'COVID-19 (unknown type)', deferral: { en: '14 days', ar: '١٤ يوم' } },
+      ]
+    },
+    {
+      category: { en: '4-Week Deferral', ar: 'تأجيل ٤ أسابيع' },
+      items: [
+        { name: 'Rubella (German measles)', deferral: { en: '4 weeks', ar: '٤ أسابيع' } },
+        { name: 'Varicella (Chickenpox)', deferral: { en: '4 weeks', ar: '٤ أسابيع' } },
+      ]
+    },
+    {
+      category: { en: 'Special Assessment', ar: 'تقييم خاص' },
+      items: [
+        { name: 'Smallpox vaccinia (replication competent)', deferral: { en: 'Special assessment required', ar: 'يتطلب تقييم خاص' } },
+        { name: 'Experimental vaccines', deferral: { en: '12 months', ar: '١٢ شهر' } },
+      ]
+    },
+  ];
+
+  return (
+    <div className="border border-green-200 rounded-xl overflow-hidden bg-green-50">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full px-4 py-3 flex items-center justify-between bg-green-100 hover:bg-green-200 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <FileText className="w-5 h-5 text-green-700" />
+          <span className="font-medium text-green-800">
+            {language === 'en' ? 'View Vaccine Deferral List' : 'عرض قائمة اللقاحات المؤجلة'}
+          </span>
+        </div>
+        <ChevronRight className={`w-5 h-5 text-green-600 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+      </button>
+      
+      {expanded && (
+        <div className="p-3 max-h-80 overflow-y-auto">
+          <p className="text-xs text-green-700 mb-3 px-1">
+            {language === 'en' 
+              ? 'Click on a category to see vaccines and their deferral periods:' 
+              : 'انقر على فئة لرؤية اللقاحات وفترات التأجيل:'}
+          </p>
+          <div className="space-y-2">
+            {vaccines.map((cat, idx) => (
+              <div key={idx} className="border border-green-200 rounded-lg overflow-hidden bg-white">
+                <button
+                  onClick={() => setExpandedCategory(expandedCategory === idx ? null : idx)}
+                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-green-50 transition-colors"
+                >
+                  <span className="font-medium text-sm text-gray-700">
+                    {language === 'en' ? cat.category.en : cat.category.ar}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{cat.items.length}</span>
+                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === idx ? 'rotate-90' : ''}`} />
+                  </div>
+                </button>
+                {expandedCategory === idx && (
+                  <div className="border-t border-green-100 bg-gray-50">
+                    {cat.items.map((vac, vidx) => (
+                      <div key={vidx} className="px-3 py-2 flex justify-between items-center text-sm border-b border-gray-100 last:border-b-0">
+                        <span className="text-gray-700">{vac.name}</span>
+                        <span className={`font-medium text-xs px-2 py-0.5 rounded ${
+                          vac.deferral.en === 'No deferral' 
+                            ? 'text-green-600 bg-green-50' 
+                            : 'text-orange-600 bg-orange-50'
+                        }`}>
+                          {language === 'en' ? vac.deferral.en : vac.deferral.ar}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BloodDonorApp() {
+  const [activeTab, setActiveTab] = useState('questionnaire');
+  const [language, setLanguage] = useState('en');
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-red-50">
+      <header className="bg-gradient-to-r from-red-700 via-red-600 to-rose-600 text-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><Heart className="w-6 h-6" /></div>
+              <div>
+                <h1 className="text-lg font-bold">{language === 'en' ? 'Blood Donor Screening' : 'فحص المتبرعين بالدم'}</h1>
+                <p className="text-xs text-red-100">{language === 'en' ? 'Saudi National Blood Bank' : 'بنك الدم الوطني السعودي'}</p>
+              </div>
+            </div>
+            <button onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')} className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm">
+              <Globe className="w-4 h-4" />{language === 'en' ? 'عربي' : 'EN'}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <nav className="bg-white border-b shadow-sm sticky top-[72px] z-40">
+        <div className="max-w-4xl mx-auto px-4 flex">
+          <button onClick={() => setActiveTab('questionnaire')} className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 ${activeTab === 'questionnaire' ? 'border-red-600 text-red-700 bg-red-50/50' : 'border-transparent text-gray-500'}`}>
+            <FileText className="w-4 h-4" />{language === 'en' ? 'Questionnaire' : 'الاستبيان'}
+          </button>
+          <button onClick={() => setActiveTab('database')} className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium border-b-2 ${activeTab === 'database' ? 'border-red-600 text-red-700 bg-red-50/50' : 'border-transparent text-gray-500'}`}>
+            <Database className="w-4 h-4" />{language === 'en' ? 'Rules Database' : 'قاعدة القواعد'}
+          </button>
+        </div>
+      </nav>
+
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        {activeTab === 'questionnaire' ? <Questionnaire language={language} rules={RULES_DATA.rules} /> : <RulesDatabase language={language} rules={RULES_DATA.rules} metadata={RULES_DATA.metadata} />}
+      </main>
+
+      <footer className="bg-gray-800 text-gray-400 py-6 mt-12">
+        <div className="max-w-4xl mx-auto px-4 text-center text-sm">
+          <p>{language === 'en' ? 'Based on Saudi National DHQ Guidelines' : 'بناءً على إرشادات استبيان المتبرعين الوطني السعودي'}</p>
+          <p className="mt-1 text-gray-500">Version {RULES_DATA.metadata.version}</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function Questionnaire({ language, rules }) {
+  const [step, setStep] = useState('intro');
+  const [gender, setGender] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [deferrals, setDeferrals] = useState([]);
+  const [qIndex, setQIndex] = useState(0);
+  const [followup, setFollowup] = useState(null);
+  const [travelInfo, setTravelInfo] = useState({ dest: '', date: '' });
+
+  const questions = useMemo(() => gender ? QUESTIONS.filter(q => !q.gender || q.gender === gender) : QUESTIONS, [gender]);
+  const currentQ = questions[qIndex];
+  const progress = ((qIndex + 1) / questions.length) * 100;
+
+  const addDeferral = (type, days, reason, qId) => {
+    if (!type) return;
+    setDeferrals(prev => {
+      const filtered = prev.filter(d => d.question !== qId);
+      return [...filtered, { type, days, reason, question: qId, date: new Date().toISOString() }];
+    });
+  };
+
+  const removeDeferral = (qId) => {
+    setDeferrals(prev => prev.filter(d => d.question !== qId));
+  };
+
+  const goToNext = () => {
+    setFollowup(null);
+    if (qIndex < questions.length - 1) {
+      setQIndex(qIndex + 1);
+    } else {
+      setStep('result');
+    }
+  };
+
+  const goToPrevious = () => {
+    if (followup) {
+      setFollowup(null);
+      return;
+    }
+    if (qIndex > 0) {
+      setAnswers(prev => {
+        const newAnswers = { ...prev };
+        delete newAnswers[currentQ.id];
+        delete newAnswers[currentQ.id + '_followup'];
+        return newAnswers;
+      });
+      removeDeferral(currentQ.id);
+      setQIndex(qIndex - 1);
+    } else {
+      setStep('requirements');
+    }
+  };
+
+  const handleAnswer = (answer) => {
+    const q = currentQ;
+    setAnswers(prev => ({ ...prev, [q.id]: answer }));
+    removeDeferral(q.id);
+
+    // Only show followup if YES and question has followup
+    if (answer === 'YES' && q.followup) {
+      setFollowup(q.followup);
+      return;
+    }
+
+    // Check for deferrals based on rules
+    const rule = rules.find(r => r.question_number === q.id);
+    if (rule) {
+      const outcome = answer === 'YES' ? rule.outcome_if_yes : rule.outcome_if_no;
+      
+      // Determine if outcome triggers a deferral
+      if (outcome) {
+        let deferralType = null;
+        let deferralDays = 0;
+        
+        // Check for explicit DEFER outcomes
+        if (outcome === 'DEFER_PERMANENT' || outcome === 'DEFER_INDEFINITE') {
+          deferralType = 'permanent';
+        } else if (outcome === 'DEFER_DURING_BF') {
+          // Breastfeeding - indefinite until breastfeeding ends
+          deferralType = 'indefinite';
+        } else if (outcome.startsWith('DEFER_')) {
+          deferralType = 'temporary';
+          // Parse duration from outcome like DEFER_6_MONTHS, DEFER_3_YEARS, etc.
+          const match = outcome.match(/DEFER_(\d+)_?(DAYS?|WEEKS?|MONTHS?|YEARS?|[DWMYH])?/i);
+          if (match) {
+            const num = parseInt(match[1]);
+            const unit = (match[2] || '').toUpperCase();
+            if (unit.startsWith('H')) deferralDays = Math.ceil(num / 24); // Hours
+            else if (unit.startsWith('D')) deferralDays = num;
+            else if (unit.startsWith('W')) deferralDays = num * 7;
+            else if (unit.startsWith('M')) deferralDays = num * 30;
+            else if (unit.startsWith('Y')) deferralDays = num * 365;
+            else deferralDays = num; // Default to days
+          } else if (rule.deferral_duration && rule.deferral_unit) {
+            // Use rule's duration if outcome doesn't specify
+            const num = rule.deferral_duration;
+            const unit = rule.deferral_unit;
+            if (unit === 'hours') deferralDays = Math.ceil(num / 24);
+            else if (unit === 'days') deferralDays = num;
+            else if (unit === 'weeks') deferralDays = num * 7;
+            else if (unit === 'months') deferralDays = num * 30;
+            else if (unit === 'years') deferralDays = num * 365;
+          }
+        } else if (outcome === 'EVALUATE' || outcome === 'EVALUATE_PER_SOP' || 
+                   outcome === 'EVALUATE_REASON' || outcome === 'EVALUATE_OUTBREAKS' ||
+                   outcome === 'EVALUATE_TRANSPLANT_TYPE' || outcome === 'EVALUATE_UNDERLYING_CONDITION' ||
+                   outcome === 'SPECIAL_ASSESSMENT' || outcome === 'TRALI_RESTRICTION' ||
+                   outcome === 'ELIGIBLE_PER_PHYSICIAN' || outcome === 'ELIGIBLE_IF_PATHOGEN_REDUCED' ||
+                   outcome === 'ASK_TO_EAT' || outcome === 'FINAL_OUTCOME') {
+          // Questions requiring physician/staff evaluation should flag for review
+          deferralType = 'hold_for_review';
+        }
+        // Skip outcomes that are workflow indicators (CHECK_, CONTINUE_, BRANCH_) - handled by followup UI
+        
+        if (deferralType) {
+          addDeferral(deferralType, deferralDays, rule.rationale_en, q.id);
+        }
+      }
+    }
+
+    goToNext();
+  };
+
+  const handleFollowup = (type, days, reason) => {
+    if (type) addDeferral(type, days, reason, currentQ.id);
+    goToNext();
+  };
+
+  const reset = () => {
+    setStep('intro'); 
+    setGender(null); 
+    setAnswers({}); 
+    setDeferrals([]); 
+    setQIndex(0); 
+    setFollowup(null); 
+    setTravelInfo({ dest: '', date: '' });
+  };
+
+  const result = useMemo(() => {
+    if (!deferrals.length) return { status: 'ELIGIBLE', canDonate: true, deferrals: [] };
+    const perm = deferrals.filter(d => d.type === 'permanent');
+    const indef = deferrals.filter(d => d.type === 'indefinite');
+    const temp = deferrals.filter(d => d.type === 'temporary');
+    const review = deferrals.filter(d => d.type === 'hold_for_review');
+
+    if (perm.length) return { status: 'PERMANENTLY_DEFERRED', canDonate: false, deferrals, controlling: perm[0] };
+    if (indef.length) return { status: 'INDEFINITELY_DEFERRED', canDonate: false, deferrals, controlling: indef[0] };
+    if (temp.length) {
+      let maxEnd = null, ctrl = null;
+      temp.forEach(d => {
+        const end = new Date(d.date);
+        end.setDate(end.getDate() + (d.days || 0));
+        d.endDate = end;
+        if (!maxEnd || end > maxEnd) { maxEnd = end; ctrl = d; }
+      });
+      return { status: 'TEMPORARILY_DEFERRED', canDonate: false, deferrals, controlling: ctrl, endDate: maxEnd, daysLeft: Math.ceil((maxEnd - new Date()) / 86400000) };
+    }
+    if (review.length) return { status: 'PENDING_REVIEW', canDonate: false, deferrals, controlling: review[0] };
+    return { status: 'ELIGIBLE', canDonate: true, deferrals: [] };
+  }, [deferrals]);
+
+  // Intro
+  if (step === 'intro') return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="bg-gradient-to-r from-red-600 to-rose-500 p-6 text-white">
+        <h2 className="text-xl font-bold mb-2">{language === 'en' ? 'Donor Eligibility Screening' : 'فحص أهلية المتبرع'}</h2>
+        <p className="text-red-100 text-sm">{language === 'en' ? 'Answer questions to check your eligibility' : 'أجب على الأسئلة لتحديد أهليتك'}</p>
+      </div>
+      <div className="p-6 space-y-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <p className="text-sm text-amber-800">{language === 'en' ? 'Please answer all questions accurately as the goal to ensure your safety and the safety of the patient receiving the blood. All answers are kept confidential.' : 'نرجو الإجابة بدقة على كل الأسئلة حيث تهدف لضمان سلامتك وسلامة من يتلقى الدم. تعامل كل الأجوبة بسرية تامة.'}</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{language === 'en' ? 'Select your gender:' : 'اختر جنسك:'}</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => setGender('male')} className={`p-4 rounded-xl border-2 transition-all ${gender === 'male' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-red-300'}`}>
+              <span className="text-2xl block mb-1">👨</span><span className="font-medium">{language === 'en' ? 'Male' : 'ذكر'}</span>
+            </button>
+            <button onClick={() => setGender('female')} className={`p-4 rounded-xl border-2 transition-all ${gender === 'female' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-red-300'}`}>
+              <span className="text-2xl block mb-1">👩</span><span className="font-medium">{language === 'en' ? 'Female' : 'أنثى'}</span>
+            </button>
+          </div>
+        </div>
+        <button onClick={() => gender && setStep('requirements')} disabled={!gender} className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${gender ? 'bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-700 hover:to-rose-600' : 'bg-gray-300 cursor-not-allowed'}`}>
+          {language === 'en' ? 'Continue' : 'متابعة'} <ChevronRight className="w-5 h-5 inline ml-2" />
+        </button>
+      </div>
+    </div>
+  );
+
+  // Requirements
+  if (step === 'requirements') return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
+        <div className="flex items-center gap-3 mb-2"><Info className="w-6 h-6" /><h2 className="text-xl font-bold">{language === 'en' ? 'Donation Requirements' : 'شروط التبرع بالدم'}</h2></div>
+        <p className="text-blue-100 text-sm">{language === 'en' ? 'Ensure you meet these criteria before proceeding' : 'تأكد من استيفاء هذه المعايير قبل المتابعة'}</p>
+      </div>
+      <div className="p-6">
+        <ul className="space-y-2">
+          {ELIGIBILITY_REQUIREMENTS.map((r, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"><Check className="w-3 h-3" /></div>
+              <span className="text-sm text-gray-700" dir={language === 'ar' ? 'rtl' : 'ltr'}>{language === 'en' ? r.en : r.ar}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex gap-3">
+          <button onClick={() => setStep('intro')} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-1">
+            <ChevronLeft className="w-4 h-4" />{language === 'en' ? 'Back' : 'رجوع'}
+          </button>
+          <button onClick={() => setStep('questions')} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-500 text-white font-semibold hover:from-red-700 hover:to-rose-600 transition-all flex items-center justify-center gap-1">
+            {language === 'en' ? 'Begin Questionnaire' : 'بدء الاستبيان'} <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Result
+  if (step === 'result') return <ResultScreen result={result} language={language} onReset={reset} />;
+
+  // Followup screens
+  if (followup) return (
+    <FollowupScreen 
+      type={followup} 
+      language={language} 
+      q={currentQ} 
+      onSelect={handleFollowup} 
+      onBack={() => setFollowup(null)}
+      travelInfo={travelInfo} 
+      setTravelInfo={setTravelInfo} 
+    />
+  );
+
+  // Questions
+  return (
+    <div className="space-y-4">
+      {/* Progress Bar */}
+      <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <span>{language === 'en' ? 'Question' : 'السؤال'} {currentQ?.id}</span>
+          <span>{qIndex + 1} / {questions.length}</span>
+        </div>
+        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-red-500 to-rose-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+
+      {/* Question Card */}
+      {currentQ && (
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="bg-red-50 px-6 py-3 border-b border-red-100">
+            <span className="text-lg font-bold text-red-700">{currentQ.id}</span>
+            {currentQ.category && (
+              <span className="ml-3 text-xs text-red-500 bg-red-100 px-2 py-1 rounded-full capitalize">
+                {currentQ.category.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+              {language === 'en' ? currentQ.en : currentQ.ar}
+            </h3>
+            
+            {/* Reference Links */}
+            {currentQ.reference && (
+              <div className="mb-6">
+                {currentQ.reference === 'medication' && (
+                  <MedicationList language={language} />
+                )}
+                {currentQ.reference === 'travel' && (
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                    <div className="flex items-start gap-3">
+                      <ExternalLink className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm space-y-2">
+                        <p className="text-blue-800 font-medium mb-2">
+                          {language === 'en' ? 'Check travel health advisories:' : 'راجع إرشادات صحة السفر:'}
+                        </p>
+                        <div className="space-y-1">
+                          <ExtLink href={REFERENCE_LINKS.pha.url}>
+                            {language === 'en' ? REFERENCE_LINKS.pha.name : REFERENCE_LINKS.pha.nameAr}
+                          </ExtLink>
+                          <br />
+                          <ExtLink href={REFERENCE_LINKS.moh.url}>
+                            {language === 'en' ? REFERENCE_LINKS.moh.name : REFERENCE_LINKS.moh.nameAr}
+                          </ExtLink>
+                          <br />
+                          <ExtLink href={REFERENCE_LINKS.shc.url}>
+                            {language === 'en' ? REFERENCE_LINKS.shc.name : REFERENCE_LINKS.shc.nameAr}
+                          </ExtLink>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {currentQ.reference === 'malaria' && (
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                    <div className="flex items-start gap-3">
+                      <ExternalLink className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="text-blue-800 font-medium mb-2">
+                          {language === 'en' ? 'Check malaria endemic areas:' : 'تحقق من مناطق الملاريا الموبوءة:'}
+                        </p>
+                        <ExtLink href={REFERENCE_LINKS.cdc_malaria.url}>
+                          {language === 'en' ? REFERENCE_LINKS.cdc_malaria.name : REFERENCE_LINKS.cdc_malaria.nameAr}
+                        </ExtLink>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Answer Buttons */}
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => handleAnswer('YES')} 
+                className="flex items-center justify-center gap-2 py-4 rounded-xl bg-green-50 border-2 border-green-200 text-green-700 font-semibold hover:bg-green-100 hover:border-green-300 transition-all"
+              >
+                <Check className="w-5 h-5" />{language === 'en' ? 'Yes' : 'نعم'}
+              </button>
+              <button 
+                onClick={() => handleAnswer('NO')} 
+                className="flex items-center justify-center gap-2 py-4 rounded-xl bg-red-50 border-2 border-red-200 text-red-700 font-semibold hover:bg-red-100 hover:border-red-300 transition-all"
+              >
+                <X className="w-5 h-5" />{language === 'en' ? 'No' : 'لا'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Buttons */}
+      <div className="flex gap-3">
+        <button 
+          onClick={goToPrevious} 
+          className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          {language === 'en' ? 'Previous' : 'السابق'}
+        </button>
+        {answers[currentQ?.id] && (
+          <button 
+            onClick={goToNext}
+            className="flex-1 py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
+          >
+            {language === 'en' ? 'Next' : 'التالي'}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Deferrals Count */}
+      {deferrals.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600" />
+          <span className="text-sm text-amber-800">
+            {deferrals.length} {language === 'en' ? 'potential deferral(s) noted' : 'تأجيل(ات) محتملة'}
+          </span>
+        </div>
+      )}
+
+      {/* Reset Button */}
+      <button onClick={reset} className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
+        <RefreshCw className="w-4 h-4" />{language === 'en' ? 'Start Over' : 'البدء من جديد'}
+      </button>
+    </div>
+  );
+}
+
+function FollowupScreen({ type, language, q, onSelect, onBack, travelInfo, setTravelInfo }) {
+  const options = {
+    dental: [
+      { id: 'none', en: 'Ortho wire adjustment, Fluoride, Superficial cleaning, Appliance delivery - No deferral', ar: 'تعديل سلك التقويم، الفلورايد، التنظيف السطحي - بدون تأجيل', days: 0, t: null },
+      { id: '24h', en: 'Fillings, Simple root canal, Crown/bridge prep, Ortho band - 24 hours deferral', ar: 'حشوات، علاج عصب بسيط، تحضير تاج/جسر - تأجيل ٢٤ ساعة', days: 1, t: 'temporary' },
+      { id: '7d', en: 'Extractions, Biopsy, Dental implant, Surgical procedures - 7 days deferral', ar: 'خلع، خزعة، زراعة أسنان، جراحات - تأجيل ٧ أيام', days: 7, t: 'temporary' },
+    ],
+    wound: [
+      { id: 'healed', en: 'Wound healed, no infection - No deferral', ar: 'الجرح شُفي، لا يوجد التهاب - بدون تأجيل', days: 0, t: null },
+      { id: 'no_abx', en: 'Minor infection, healed without antibiotics - 2 weeks deferral', ar: 'التهاب بسيط، شُفي بدون مضادات حيوية - تأجيل أسبوعين', days: 14, t: 'temporary' },
+      { id: 'abx', en: 'Used oral/IV antibiotics - 4 weeks deferral after completion', ar: 'استخدم مضادات حيوية فموية/وريدية - تأجيل ٤ أسابيع بعد الانتهاء', days: 28, t: 'temporary' },
+    ],
+    diabetes: [
+      { id: 'complications', en: 'Yes, I have dizziness when standing OR foot/leg ulcers - Permanent deferral', ar: 'نعم، أعاني من دوخة عند الوقوف أو تقرحات في القدم - تأجيل دائم', days: null, t: 'permanent' },
+      { id: 'acute', en: 'Had acute episode in past 3 months (needed help or ER visit) - 3 months deferral', ar: 'حدثت نوبة حادة خلال ٣ أشهر الماضية - تأجيل ٣ أشهر', days: 90, t: 'temporary' },
+      { id: 'ok', en: 'Diabetes well controlled, no complications, have eaten in past 2 hours - Eligible', ar: 'السكري مضبوط، لا مضاعفات، أكلت مؤخراً - مؤهل', days: 0, t: null },
+    ],
+    pregnancy: [
+      { id: 'recent', en: 'Yes, pregnant in past 9 months - 9 months deferral from pregnancy end', ar: 'نعم، حمل خلال ٩ أشهر الماضية - تأجيل ٩ أشهر من نهاية الحمل', days: 270, t: 'temporary' },
+      { id: 'old', en: 'No, pregnancy was more than 9 months ago - Eligible (TRALI restriction may apply)', ar: 'لا، الحمل كان قبل أكثر من ٩ أشهر - مؤهلة (قد تُطبق قيود TRALI)', days: 0, t: null },
+    ],
+    medication: [
+      { id: 'taking', en: 'Yes, I am taking a medication from the deferral list', ar: 'نعم، أتناول دواء من قائمة التأجيل', days: null, t: 'hold_for_review' },
+      { id: 'not_taking', en: 'No, I am not taking any medication from the list', ar: 'لا، لا أتناول أي دواء من القائمة', days: 0, t: null },
+    ],
+    vaccine: [
+      { id: '4w', en: 'Live attenuated: Rubella, Varicella - 4 weeks deferral', ar: 'حية مضعفة: الحصبة الألمانية، جدري الماء - ٤ أسابيع', days: 28, t: 'temporary' },
+      { id: '2w', en: 'Live attenuated: Measles, Mumps, Oral Polio, Yellow fever - 2 weeks deferral', ar: 'حية مضعفة: الحصبة، النكاف، شلل الأطفال - أسبوعين', days: 14, t: 'temporary' },
+      { id: 'covid', en: 'COVID-19 live attenuated - 14 days deferral', ar: 'كوفيد-١٩ حي مضعف - ١٤ يوماً', days: 14, t: 'temporary' },
+      { id: 'none', en: 'Jynneos, COVID-19 mRNA, Killed vaccines, Recombinant, Intranasal flu - No deferral if symptom-free', ar: 'جاينيوس، كوفيد mRNA، لقاحات ميتة، مؤتلفة - بدون تأجيل', days: 0, t: null },
+    ],
+    smallpox: [
+      { id: 'jynneos', en: 'Contact was vaccinated with Jynneos (non-replicating) - No deferral', ar: 'الشخص تلقى لقاح جاينيوس (غير متكاثر) - بدون تأجيل', days: 0, t: null },
+      { id: 'no_contact', en: 'Other vaccine but NO contact with vaccination site or bandages - No deferral', ar: 'لقاح آخر لكن لا ملامسة للموقع أو الضمادات - بدون تأجيل', days: 0, t: null },
+      { id: 'complications', en: 'Had contact with vaccination site/bandages OR developed complications - 8 weeks deferral', ar: 'لامست موقع التطعيم/الضمادات أو ظهرت مضاعفات - ٨ أسابيع', days: 56, t: 'temporary' },
+    ],
+    malaria: [
+      { id: 'short', en: 'Stay was ≤24 hours in endemic area - Eligible', ar: 'الإقامة كانت ≤٢٤ ساعة في المنطقة الموبوءة - مؤهل', days: 0, t: null },
+      { id: 'traveler', en: 'Traveler (not resident), stayed >24 hours in endemic area - 3 months deferral', ar: 'مسافر (ليس مقيماً)، أقام >٢٤ ساعة - تأجيل ٣ أشهر', days: 90, t: 'temporary' },
+      { id: 'resident', en: 'Resident of endemic country (>5 years) - 3 years deferral from departure', ar: 'مقيم في دولة موبوءة (>٥ سنوات) - تأجيل ٣ سنوات من المغادرة', days: 1095, t: 'temporary' },
+    ],
+    blood_contact: [
+      { id: 'open_wound', en: 'Contact with open wound/non-intact skin/mucous membrane with blood - 6 months deferral', ar: 'تلامس مع جرح مفتوح/جلد غير سليم/أغشية مخاطية مع الدم - تأجيل ٦ أشهر', days: 180, t: 'temporary' },
+      { id: 'needlestick', en: 'Needle-stick/sharps injury from instrument used on another person - 6 months deferral', ar: 'وخز إبرة/إصابة بأدوات حادة استخدمت على شخص آخر - تأجيل ٦ أشهر', days: 180, t: 'temporary' },
+      { id: 'intact_skin', en: 'Contact with intact skin only (no open wounds/cuts) - No deferral', ar: 'تلامس مع جلد سليم فقط (بدون جروح مفتوحة) - بدون تأجيل', days: 0, t: null },
+    ],
+  };
+
+  // Travel followup with form
+  if (type === 'travel') return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-red-50 px-6 py-3 border-b border-red-100 flex items-center justify-between">
+          <div>
+            <span className="text-lg font-bold text-red-700">{q.id}</span>
+            <span className="text-red-400 mx-2">•</span>
+            <span className="text-red-600 text-sm">{language === 'en' ? 'Follow-up' : 'متابعة'}</span>
+          </div>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-sm text-blue-800 font-medium mb-3">
+              {language === 'en' 
+                ? 'Please provide your travel details. Staff will check for disease outbreaks and endemic areas.' 
+                : 'يرجى تقديم تفاصيل سفرك. سيتحقق الموظفون من الأوبئة والمناطق الموبوءة.'}
+            </p>
+            <div className="space-y-1 text-sm">
+              <ExtLink href={REFERENCE_LINKS.pha.url}>
+                {language === 'en' ? REFERENCE_LINKS.pha.name : REFERENCE_LINKS.pha.nameAr}
+              </ExtLink>
+              <br />
+              <ExtLink href={REFERENCE_LINKS.moh.url}>
+                {language === 'en' ? REFERENCE_LINKS.moh.name : REFERENCE_LINKS.moh.nameAr}
+              </ExtLink>
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {language === 'en' ? 'Where did you travel? (Country/Region)' : 'أين سافرت؟ (الدولة/المنطقة)'}
+            </label>
+            <input 
+              type="text" 
+              value={travelInfo.dest} 
+              onChange={e => setTravelInfo(p => ({ ...p, dest: e.target.value }))} 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+              placeholder={language === 'en' ? 'e.g., Egypt, UAE, India' : 'مثال: مصر، الإمارات، الهند'} 
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {language === 'en' ? 'When did you return?' : 'متى عدت؟'}
+            </label>
+            <input 
+              type="date" 
+              value={travelInfo.date} 
+              onChange={e => setTravelInfo(p => ({ ...p, date: e.target.value }))} 
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+            />
+          </div>
+
+          <button 
+            onClick={() => onSelect('hold_for_review', null, `Travel to ${travelInfo.dest} - requires outbreak/endemic check`)} 
+            disabled={!travelInfo.dest || !travelInfo.date}
+            className={`w-full py-4 rounded-xl font-semibold text-white transition-all ${
+              travelInfo.dest && travelInfo.date 
+                ? 'bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-700 hover:to-rose-600' 
+                : 'bg-gray-300 cursor-not-allowed'
+            }`}
+          >
+            {language === 'en' ? 'Continue' : 'متابعة'}
+          </button>
+        </div>
+      </div>
+      
+      <button 
+        onClick={onBack}
+        className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        {language === 'en' ? 'Back to Question' : 'العودة للسؤال'}
+      </button>
+    </div>
+  );
+
+  // Standard options followup
+  const opts = options[type] || [];
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-red-50 px-6 py-3 border-b border-red-100">
+          <span className="text-lg font-bold text-red-700">{q.id}</span>
+          <span className="text-red-400 mx-2">•</span>
+          <span className="text-red-600 text-sm">{language === 'en' ? 'Follow-up' : 'متابعة'}</span>
+        </div>
+        <div className="p-6 space-y-3">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            {language === 'en' ? q.en : q.ar}
+          </h3>
+          
+          {/* Malaria reference link */}
+          {type === 'malaria' && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <ExtLink href={REFERENCE_LINKS.cdc_malaria.url} className="text-sm">
+                {language === 'en' ? 'Check CDC Malaria Endemic Areas Map' : 'تحقق من خريطة مناطق الملاريا'}
+              </ExtLink>
+            </div>
+          )}
+          
+          {opts.map(opt => (
+            <button 
+              key={opt.id} 
+              onClick={() => onSelect(opt.t, opt.days, language === 'en' ? opt.en : opt.ar)}
+              className="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-red-300 hover:bg-red-50/50 transition-all"
+            >
+              <span className="text-gray-800" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                {language === 'en' ? opt.en : opt.ar}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <button 
+        onClick={onBack}
+        className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        {language === 'en' ? 'Back to Question' : 'العودة للسؤال'}
+      </button>
+    </div>
+  );
+}
+
+function ResultScreen({ result, language, onReset }) {
+  const config = {
+    ELIGIBLE: { icon: Check, bg: 'bg-green-500', title: { en: 'Eligible to Donate', ar: 'مؤهل للتبرع' }, desc: { en: 'You meet all eligibility criteria', ar: 'تستوفي جميع معايير الأهلية' } },
+    TEMPORARILY_DEFERRED: { icon: Clock, bg: 'bg-orange-500', title: { en: 'Temporarily Deferred', ar: 'مؤجل مؤقتاً' }, desc: { en: 'You are temporarily unable to donate', ar: 'غير قادر مؤقتاً على التبرع' } },
+    INDEFINITELY_DEFERRED: { icon: Clock, bg: 'bg-red-400', title: { en: 'Indefinitely Deferred', ar: 'مؤجل لأجل غير مسمى' }, desc: { en: 'Deferred until condition resolves', ar: 'مؤجل حتى يتم حل الحالة' } },
+    PERMANENTLY_DEFERRED: { icon: X, bg: 'bg-red-600', title: { en: 'Permanently Deferred', ar: 'مؤجل بشكل دائم' }, desc: { en: 'Not eligible to donate blood', ar: 'غير مؤهل للتبرع بالدم' } },
+    PENDING_REVIEW: { icon: FileText, bg: 'bg-blue-500', title: { en: 'Pending Review', ar: 'في انتظار المراجعة' }, desc: { en: 'Your eligibility requires staff review', ar: 'تتطلب أهليتك مراجعة الموظفين' } },
+  };
+  const c = config[result.status] || config.PENDING_REVIEW;
+  const Icon = c.icon;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className={`${c.bg} p-8 text-white text-center`}>
+          <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Icon className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">{language === 'en' ? c.title.en : c.title.ar}</h2>
+          <p className="text-white/80">{language === 'en' ? c.desc.en : c.desc.ar}</p>
+        </div>
+
+        {result.endDate && (
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center gap-3 mb-3">
+              <Calendar className="w-5 h-5 text-gray-500" />
+              <span className="font-medium text-gray-700">{language === 'en' ? 'Eligible Again On:' : 'مؤهل مرة أخرى في:'}</span>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-2xl font-bold text-gray-800">
+                {result.endDate.toLocaleDateString(language === 'en' ? 'en-US' : 'ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {result.daysLeft} {language === 'en' ? 'days from today' : 'يوماً من اليوم'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {result.deferrals.length > 0 && (
+          <div className="p-6">
+            <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Info className="w-5 h-5 text-gray-500" />
+              {language === 'en' ? 'Deferral Reasons' : 'أسباب التأجيل'}
+              <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">{result.deferrals.length}</span>
+            </h3>
+            <div className="space-y-3">
+              {result.deferrals.map((d, i) => (
+                <div key={i} className={`p-4 rounded-xl border ${d === result.controlling ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-medium text-gray-500">{d.question}</span>
+                    {d === result.controlling && (
+                      <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">
+                        {language === 'en' ? 'Controlling' : 'المتحكم'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-800">{d.reason}</p>
+                  <div className="text-xs text-gray-500 mt-1 capitalize">
+                    {d.type?.replace(/_/g, ' ')} {d.days ? `• ${d.days} days` : ''}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <button 
+        onClick={onReset} 
+        className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-500 text-white font-semibold hover:from-red-700 hover:to-rose-600 transition-all flex items-center justify-center gap-2"
+      >
+        <RefreshCw className="w-5 h-5" />
+        {language === 'en' ? 'Start New Screening' : 'بدء فحص جديد'}
+      </button>
+    </div>
+  );
+}
+
+function RulesDatabase({ language, rules, metadata }) {
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('all');
+  const [expanded, setExpanded] = useState(null);
+
+  const categories = useMemo(() => ['all', ...new Set(rules.map(r => r.category).filter(Boolean))].sort(), [rules]);
+  
+  const filtered = useMemo(() => rules.filter(r => {
+    if (category !== 'all' && r.category !== category) return false;
+    if (search) {
+      const q = search.toLowerCase().trim();
+      const qNum = r.question_number || '';
+      
+      // Check if search looks like a question number (Q followed by number, REQ-, or just a number)
+      const isQuestionSearch = /^(q\d+(\.\d+)?|req-?\d+|\d+(\.\d+)?)$/i.test(q);
+      
+      if (isQuestionSearch) {
+        // Extract the search number/pattern
+        let searchPattern = q.toUpperCase();
+        
+        // If just a number like "3", convert to "Q3"
+        if (/^\d+$/.test(q)) {
+          searchPattern = 'Q' + q;
+        }
+        // If "q3" format, normalize to "Q3"
+        else if (/^q\d/i.test(q)) {
+          searchPattern = 'Q' + q.slice(1);
+        }
+        
+        // For exact question number match (e.g., searching "3" or "Q3" should only match "Q3", not "Q13", "Q23", "Q9.3")
+        // Check if the rule's question number starts with our pattern followed by a dot or end of string
+        const ruleNumUpper = qNum.toUpperCase();
+        
+        // Exact match: Q3 matches Q3, Q3.1, Q3.2, etc. but NOT Q13, Q23, Q33, Q43
+        if (ruleNumUpper === searchPattern) return true;
+        if (ruleNumUpper.startsWith(searchPattern + '.')) return true;
+        
+        // For REQ searches
+        if (searchPattern.startsWith('REQ') && ruleNumUpper === searchPattern) return true;
+        
+        return false;
+      }
+      
+      // For text searches, search in text fields
+      return r.question_text_en?.toLowerCase().includes(q) || 
+             r.question_text_ar?.includes(search) || 
+             r.category?.toLowerCase().includes(q) ||
+             r.rationale_en?.toLowerCase().includes(q);
+    }
+    return true;
+  }), [rules, search, category]);
+
+  const grouped = useMemo(() => {
+    const g = {};
+    filtered.forEach(r => { 
+      const c = r.category || 'other'; 
+      if (!g[c]) g[c] = []; 
+      g[c].push(r); 
+    });
+    return g;
+  }, [filtered]);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Database className="w-6 h-6 text-red-600" />
+          <h2 className="text-lg font-bold text-gray-800">{language === 'en' ? 'Rules Database' : 'قاعدة القواعد'}</h2>
+          <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full">{rules.length}</span>
+        </div>
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input 
+            type="text" 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            placeholder={language === 'en' ? 'Search by question number, keyword...' : 'البحث برقم السؤال أو كلمة...'} 
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent" 
+          />
+        </div>
+        <select 
+          value={category} 
+          onChange={e => setCategory(e.target.value)} 
+          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+        >
+          {categories.map(c => (
+            <option key={c} value={c}>
+              {c === 'all' ? (language === 'en' ? 'All Categories' : 'جميع الفئات') : c.replace(/_/g, ' ')}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <p className="text-sm text-gray-500">
+        {language === 'en' ? `Showing ${filtered.length} of ${rules.length} rules` : `عرض ${filtered.length} من ${rules.length} قاعدة`}
+      </p>
+
+      {Object.entries(grouped).map(([cat, items]) => (
+        <div key={cat} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+            <h3 className="font-semibold text-gray-700 capitalize flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              {cat.replace(/_/g, ' ')} 
+              <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{items.length}</span>
+            </h3>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {items.map(r => (
+              <div key={r.rule_id} className="p-4 hover:bg-gray-50 transition-colors">
+                <button onClick={() => setExpanded(expanded === r.rule_id ? null : r.rule_id)} className="w-full text-left">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-red-600">{r.question_number}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          r.deferral_type === 'permanent' ? 'bg-red-100 text-red-700' : 
+                          r.deferral_type === 'temporary' ? 'bg-orange-100 text-orange-700' : 
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {r.deferral_type || r.node_type}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-800" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                        {language === 'en' ? r.question_text_en : r.question_text_ar}
+                      </p>
+                    </div>
+                    <ChevronRight className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ml-2 ${expanded === r.rule_id ? 'rotate-90' : ''}`} />
+                  </div>
+                </button>
+                {expanded === r.rule_id && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-3 text-sm">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div><span className="text-gray-500">Rule ID:</span> <span className="font-mono">{r.rule_id}</span></div>
+                      <div><span className="text-gray-500">Applies to:</span> <span className="capitalize">{r.applies_to}</span></div>
+                      {r.deferral_duration && (
+                        <div><span className="text-gray-500">Duration:</span> {r.deferral_duration} {r.deferral_unit}</div>
+                      )}
+                      {r.deferral_duration_days && (
+                        <div><span className="text-gray-500">Days:</span> {r.deferral_duration_days}</div>
+                      )}
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 mb-2">Outcomes:</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-green-50 rounded p-2">
+                          <span className="text-green-700 font-medium">YES →</span> {r.outcome_if_yes}
+                        </div>
+                        <div className="bg-red-50 rounded p-2">
+                          <span className="text-red-700 font-medium">NO →</span> {r.outcome_if_no || '-'}
+                        </div>
+                      </div>
+                    </div>
+                    {r.rationale_en && (
+                      <p><span className="text-gray-500">Rationale:</span> {r.rationale_en}</p>
+                    )}
+                    {r.trali_note && (
+                      <div className="bg-yellow-50 rounded-lg p-3 text-yellow-800 text-xs">
+                        <span className="font-medium">⚠️ TRALI Note:</span> {r.trali_note}
+                      </div>
+                    )}
+                    {r.definition_note && (
+                      <div className="bg-blue-50 rounded-lg p-3 text-blue-800 text-xs">
+                        <span className="font-medium">ℹ️ Definition:</span> {r.definition_note}
+                      </div>
+                    )}
+                    {r.reference_urls && (
+                      <div className="bg-indigo-50 rounded-lg p-3">
+                        <p className="text-xs text-indigo-700 font-medium mb-2">🔗 Reference Links:</p>
+                        <div className="space-y-1">
+                          {r.reference_urls.urls ? (
+                            r.reference_urls.urls.map((ref, i) => (
+                              <a key={i} href={ref.url} target="_blank" rel="noopener noreferrer" 
+                                className="flex items-center gap-2 text-xs text-indigo-600 hover:text-indigo-800 hover:underline">
+                                <ExternalLink className="w-3 h-3" />
+                                {ref.source}
+                              </a>
+                            ))
+                          ) : r.reference_urls.url ? (
+                            <a href={r.reference_urls.url} target="_blank" rel="noopener noreferrer" 
+                              className="flex items-center gap-2 text-xs text-indigo-600 hover:text-indigo-800 hover:underline">
+                              <ExternalLink className="w-3 h-3" />
+                              {r.reference_urls.source}
+                            </a>
+                          ) : null}
+                        </div>
+                      </div>
+                    )}
+                    {r.question_number === 'Q13' && (
+                      <div className="mt-3">
+                        <MedicationList language={language} />
+                      </div>
+                    )}
+                    {r.question_number === 'Q14' && (
+                      <div className="mt-3">
+                        <VaccineList language={language} />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {filtered.length === 0 && (
+        <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+          <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600">{language === 'en' ? 'No rules found' : 'لم يتم العثور على قواعد'}</p>
+        </div>
+      )}
+
+      <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-500 text-center">
+        Version {metadata.version} • {metadata.total_rules} rules
+      </div>
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<BloodDonorApp />);
+</script>
+</body>
+</html>
